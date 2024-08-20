@@ -9,7 +9,8 @@ RUN git clone https://github.com/flick-lang/flick.git
 WORKDIR /app/flick
 RUN cargo build --release
 
-FROM debian:bookworm-slim
+# Ideally switch away from using gcc -- it adds a long start up time and is 1.5GB instead of a few MB
+FROM gcc
 
 WORKDIR /app
 COPY --from=build /app/flick/target/release/flick ./flick
