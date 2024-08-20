@@ -24,8 +24,7 @@ function App() {
       setOutput("Failed to connect to compiler")
       return
     }
-
-    setOutput("Compiling...\n")
+    setOutput("")
     socket.send(source)
   }
 
