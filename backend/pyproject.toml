@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "flick-sandbox"
+version = "0.1.0"
+description = ""
+authors = ["Max Larsson <maxslarsson@gmail.com>", "Thomas Breydo <tbreydo@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+fastapi = {extras = ["standard"], version = "^0.112.1"}
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
