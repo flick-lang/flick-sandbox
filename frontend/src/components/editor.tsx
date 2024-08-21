@@ -8,6 +8,8 @@ import { Button } from './ui/button';
 
 
 export default function Editor() {
+    const handleEditorWillMount = (monaco: Monaco) => {}
+
     const handleEditorDidMount = (editor: editor.IStandaloneCodeEditor, monaco: Monaco) => {
         // Disable features for simplicity
         editor.updateOptions({
@@ -43,7 +45,7 @@ export default function Editor() {
                     Run
                 </Button>
             </div>
-            <MonacoEditor defaultValue="// some comment" onMount={handleEditorDidMount} />
+            <MonacoEditor defaultValue="// some comment" beforeMount={handleEditorWillMount} onMount={handleEditorDidMount} />
         </div>
     )
 }
