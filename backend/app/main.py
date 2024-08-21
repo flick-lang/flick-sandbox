@@ -25,11 +25,12 @@ async def compiler(websocket: WebSocket):
         while True:
             flick_source = await websocket.receive_text()
 
+            print("Creating container")
+            container = docker_client.containers.run("compiler", tty=True, detach=True)
+            print("Container created")
+
             # BEGIN COMPILER CODE:
             try:
-                print("Creating container")
-                container = docker_client.containers.run("compiler", tty=True, detach=True)
-                print("Container created")
 
                 tar_stream = io.BytesIO()
                 with tarfile.open(fileobj=tar_stream, mode='w') as tar:
