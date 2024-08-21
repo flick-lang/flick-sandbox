@@ -11,7 +11,6 @@ RUN git clone https://github.com/flick-lang/flick.git
 WORKDIR /sandbox/flick
 RUN cargo build --release
 
-# TODO: Ideally switch away from using gcc -- it adds a long start up time and is 1.5GB instead of a few MB
 FROM gcc
 
 # We create a sandbox user, without root privileges
