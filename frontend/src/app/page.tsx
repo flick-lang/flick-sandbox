@@ -37,6 +37,11 @@ export default function Home() {
   }, [])
 
 
+  const runCode = () => {
+    console.log("Running code")
+  }
+
+
   return (
     <ResizablePanelGroup direction="horizontal" className="min-h-screen">
       <ResizablePanel defaultSize={20} maxSize={30}>
@@ -46,7 +51,7 @@ export default function Home() {
       <ResizablePanel defaultSize={80}>
         <ResizablePanelGroup direction="vertical">
           <ResizablePanel defaultSize={75} minSize={30}>
-            <Editor />
+            <Editor runCode={runCode} />
           </ResizablePanel>
           <ResizableHandle className="h-0.5" />
           {/** TODO: fix the thickness of this handle  */}

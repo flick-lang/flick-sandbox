@@ -7,7 +7,11 @@ import { Editor as MonacoEditor } from '@monaco-editor/react';
 import { Button } from './ui/button';
 
 
-export default function Editor() {
+interface EditorProps {
+    runCode: () => void
+}
+
+export default function Editor({runCode}: EditorProps) {
     const handleEditorWillMount = (monaco: Monaco) => {
         monaco.languages.register({ id: 'flick' });
 
@@ -60,7 +64,7 @@ export default function Editor() {
     return (
         <div className="h-full w-full overflow-clip">
             <div className="w-full p-5 flex justify-end">
-                <Button className="color">
+                <Button onClick={runCode}>
                     Run
                 </Button>
             </div>
