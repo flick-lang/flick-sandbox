@@ -8,10 +8,11 @@ import { Button } from './ui/button';
 
 
 interface EditorProps {
+    editorRef: React.MutableRefObject<editor.IStandaloneCodeEditor | null>
     runCode: () => void
 }
 
-export default function Editor({runCode}: EditorProps) {
+export default function Editor({ editorRef, runCode }: EditorProps) {
     const handleEditorWillMount = (monaco: Monaco) => {
         monaco.languages.register({ id: 'flick' });
 
@@ -22,7 +23,7 @@ export default function Editor({runCode}: EditorProps) {
             // defaultToken: 'invalid',
 
             keywords: [
-                "pub", "fn"
+                "pub", "fn", "extern", "if", "while"
             ],
             typeKeywords: [
                 "void"
@@ -59,6 +60,8 @@ export default function Editor({runCode}: EditorProps) {
         editor.updateOptions({
             minimap: { enabled: false }, // Disable minimap
         });
+
+        editorRef.current = editor;
     }
 
     return (

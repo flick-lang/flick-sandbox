@@ -1,5 +1,7 @@
 "use client" // necessary 
 
+import { type editor } from 'monaco-editor';
+
 import Editor from "@/components/editor"
 import Sidebar from "@/components/sidebar"
 import Output from "@/components/output"
@@ -9,18 +11,12 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable"
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 
-// import dynamic from "next/dynamic";
-// const Editor = dynamic(() => import("@/components/editor"), {ssr: false})
 
 export default function Home() {
-  /** TODO: NEXT UP!!!!!!!!!!!!!!!!!!!!!1
-
-  When Run is clicked, we need to grab editor value 
-  https://www.npmjs.com/package/@monaco-editor/react
-  */
   const [socket, setSocket] = useState<WebSocket | null>(null)
+  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const [output, setOutput] = useState("")
   
   useEffect(() => {
@@ -38,7 +34,24 @@ export default function Home() {
 
 
   const runCode = () => {
-    console.log("Running code")
+    if (editorRef.current === null) {
+      // TODO: Maybe do something here
+      return
+    }
+
+    if (socket === null) {
+      // TODO: Maybe do something here
+      return
+    }
+
+    if (socket.readyState !== WebSocket.OPEN) {
+      // TODO: Maybe do something here
+      return
+    }
+
+    setOutput("")
+    const source = editorRef.current.getValue()
+    socket.send(source)
   }
 
 
@@ -51,7 +64,7 @@ export default function Home() {
       <ResizablePanel defaultSize={80}>
         <ResizablePanelGroup direction="vertical">
           <ResizablePanel defaultSize={75} minSize={30}>
-            <Editor runCode={runCode} />
+            <Editor editorRef={editorRef} runCode={runCode} />
           </ResizablePanel>
           <ResizableHandle className="h-0.5" />
           {/** TODO: fix the thickness of this handle  */}

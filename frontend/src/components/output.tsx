@@ -7,7 +7,7 @@ interface OutputProps {
 }
 
 
-export default function Output({contents}: OutputProps) {
+export default function Output({ contents }: OutputProps) {
     return (
         <div className="h-full w-full p-3">
             <ScrollArea className="h-full w-full">
