@@ -1,4 +1,5 @@
 "use client" // necessary 
+
 import Editor from "@/components/editor"
 import Sidebar from "@/components/sidebar"
 import Output from "@/components/output"
