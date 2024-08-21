@@ -41,5 +41,5 @@ after 5 seconds.
 
 ### More on the sandbox frontend
 
-The frontend is writen in React, and it uses WebSockets for continuous communication with the backend
+The frontend is writen in Next.js using `shadcn/ui`, and it uses WebSockets for continuous communication with the backend
 when programs are running.

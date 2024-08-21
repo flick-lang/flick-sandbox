@@ -10,5 +10,5 @@ fastapi dev
 
 ```
 cd frontend
-npm start
+npm run dev
 ```
