@@ -8,6 +8,7 @@
 
 - [ ] Switch from gcc base image to something like alpine so that the container start up time is faster and size is smaller
 - [ ] Create multiple users to isolate the read/write access of each user. Compiler user should only have read/write/exec access to flick, main.fl, main.o, main. Runner user should have exec i
+  - One way to do this is create a "sandbox" group. Two users are part of the sandbox group, compiler and runner. Then chown the sandbox directory to the sandbox group with default permissions 100
 - [ ] Load something on mobile (e.g. the sidebar and a thing that says "open on desktop to try the sandbox")
 - [ ] Support basic syntax highlighting: https://codemirror.net/examples/lang-package/
 
