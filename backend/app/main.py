@@ -31,7 +31,7 @@ async def compiler(websocket: WebSocket):
                     await websocket.send_text(output.decode('utf-8'))
                     continue
 
-                _, output = container.exec_run("./main", stream=True)
+                _, output = container.exec_run("timeout 5s ./main", stream=True)
                 for line in output:
                     await websocket.send_text(f"{line.decode('utf-8')}\n")
             finally:
