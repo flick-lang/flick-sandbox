@@ -38,7 +38,7 @@ async def compiler(websocket: WebSocket):
                     tarinfo.size = len(flick_source)
                     tar.addfile(tarinfo, io.BytesIO(flick_source.encode('utf-8')))
                 tar_stream.seek(0)
-                container.put_archive("/app", tar_stream)
+                container.put_archive("/sandbox", tar_stream)
 
                 exit_code, output = container.exec_run("./flick main.fl")
                 if exit_code != 0:
