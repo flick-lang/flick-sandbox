@@ -1,10 +1,16 @@
 import io
 import docker
+import asyncio
 import tarfile
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 
 app = FastAPI()
 docker_client = docker.from_env()
+
+
+async def send_text(websocket: WebSocket, text: str):
+    await websocket.send_text(text)
+    await asyncio.sleep(0)
 
 
 @app.websocket("/ws/compiler")
@@ -13,6 +19,7 @@ async def compiler(websocket: WebSocket):
     try:
         while True:
             flick_source = await websocket.receive_text()
+            await send_text(websocket, "Compiling...\n")
 
             container = docker_client.containers.run("compiler", tty=True, detach=True)
 
@@ -27,15 +34,13 @@ async def compiler(websocket: WebSocket):
 
                 exit_code, output = container.exec_run("./flick main.fl")
                 if exit_code != 0:
-                    print(output)
-                    await websocket.send_text(output.decode('utf-8'))
+                    await send_text(websocket, f"Compilation failed:\n{output.decode('utf-8')}\n")
                     continue
 
                 _, output = container.exec_run("timeout 5s ./main", stream=True)
                 for line in output:
-                    await websocket.send_text(f"{line.decode('utf-8')}\n")
+                    await send_text(websocket, f"{line.decode('utf-8')}\n")
             finally:
-                container.stop()
-                container.remove()
+                container.remove(force=True)
     except WebSocketDisconnect:
         pass
