@@ -2,15 +2,23 @@ import io
 import docker
 import asyncio
 import tarfile
+from pathlib import Path
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from logger import logger
+
 
 app = FastAPI()
 docker_client = docker.from_env()
 
+logger.info("Building image")
+docker_file_path = str(Path(__file__).parent.parent)
+image, _ = docker_client.images.build(path=docker_file_path, tag="flick-compiler")
+logger.info("Done building image")
+
 
 async def send_text(websocket: WebSocket, text: str):
     await websocket.send_text(text)
-    await asyncio.sleep(0)
+    await asyncio.sleep(0)  # this flushes the web socket's text buffer
 
 
 @app.websocket("/ws/compiler")
@@ -21,7 +29,7 @@ async def compiler(websocket: WebSocket):
             flick_source = await websocket.receive_text()
             await send_text(websocket, "Compiling...\n")
 
-            container = docker_client.containers.run("compiler", tty=True, detach=True)
+            container = docker_client.containers.run(image, tty=True, detach=True, network_disabled=True)
 
             try:
                 tar_stream = io.BytesIO()
