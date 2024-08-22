@@ -35,6 +35,7 @@ export default function Editor({ editorRef, runCode }: EditorProps) {
 
             tokenizer: {
                 root: [
+                    // identifiers and keywords
                     [/[iu][1-9]\d*/, 'keyword'], // to show signed and unsigned int types
                     [/[a-z_$][\w$]*/, {
                         cases: {
@@ -47,12 +48,18 @@ export default function Editor({ editorRef, runCode }: EditorProps) {
                     // whitespace
                     { include: '@whitespace' },
 
+                    // delimiters and operators
+                    [/[{}()\[\]]/, '@brackets'],
+                    [/[<>](?!@symbols)/, '@brackets'],
                     [/@symbols/, {
                         cases: {
                             '@operators': 'operator',
                             '@default': ''
                         }
                     }],
+
+                    // numbers
+                    [/\d+/, 'number'],
                 ],
                 whitespace: [
                     [/[ \t\r\n]+/, 'white'],
