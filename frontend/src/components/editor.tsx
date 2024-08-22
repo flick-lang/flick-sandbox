@@ -82,6 +82,8 @@ export default function Editor({ editorRef, runCode }: EditorProps) {
         // Disable features for simplicity
         editor.updateOptions({
             minimap: { enabled: false }, // Disable minimap
+            contextmenu: false, // Disable context menu (right click)
+            quickSuggestions: false, // Disable quick suggestions
         });
 
         editorRef.current = editor;
