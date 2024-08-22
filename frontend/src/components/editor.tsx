@@ -4,7 +4,16 @@ import { type editor } from 'monaco-editor';
 import { type Monaco } from '@monaco-editor/react';
 
 import { Editor as MonacoEditor } from '@monaco-editor/react';
-import { Button } from './ui/button';
+import { Button } from '@/components/ui/button';
+import {
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectLabel,
+    SelectTrigger,
+    SelectValue,
+  } from "@/components/ui/select"
 
 
 interface EditorProps {
@@ -80,7 +89,19 @@ export default function Editor({ editorRef, runCode }: EditorProps) {
 
     return (
         <div className="h-full w-full overflow-clip">
-            <div className="w-full p-5 flex justify-end">
+            <div className="w-full p-5 flex justify-end gap-5">
+                <Select>
+                    <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Select an example" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="example1">Example 1</SelectItem>
+                        <SelectItem value="example2">Example 2</SelectItem>
+                        <SelectItem value="example3">Example 3</SelectItem>
+                        <SelectItem value="example4">Example 4</SelectItem>
+                        <SelectItem value="example5">Example 5</SelectItem>
+                    </SelectContent>
+                </Select>
                 <Button onClick={runCode}>
                     Run
                 </Button>

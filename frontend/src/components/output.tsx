@@ -9,10 +9,10 @@ interface OutputProps {
 
 export default function Output({ contents }: OutputProps) {
     return (
-        <div className="h-full w-full p-3">
+        <div className="h-full w-full">
             <ScrollArea className="h-full w-full">
                 <ScrollArea className="h-full w-full">
-                    <div className="w-max h-max whitespace-pre">
+                    <div className="w-max h-max whitespace-pre p-3">
                         {contents}
                     </div>
                     {/* <ScrollBar orientation="vertical" /> */}

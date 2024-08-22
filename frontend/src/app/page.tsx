@@ -2,6 +2,8 @@
 
 import { type editor } from 'monaco-editor';
 
+import { toast } from "sonner"
+
 import Editor from "@/components/editor"
 import Sidebar from "@/components/sidebar"
 import Output from "@/components/output"
@@ -27,6 +29,10 @@ export default function Home() {
       setOutput((prevOutput) => prevOutput + event.data)
     }
 
+    ws.onerror = (event) => {
+      toast.error("WebSocket error")
+    }
+
     return () => {
       ws.close()
     }
@@ -35,17 +41,17 @@ export default function Home() {
 
   const runCode = () => {
     if (editorRef.current === null) {
-      // TODO: Maybe do something here
+      toast.error("Editor is not initialized")
       return
     }
 
     if (socket === null) {
-      // TODO: Maybe do something here
+      toast.error("WebSocket is not initialized")
       return
     }
 
     if (socket.readyState !== WebSocket.OPEN) {
-      // TODO: Maybe do something here
+      toast.error("WebSocket connection is not open")
       return
     }
 
