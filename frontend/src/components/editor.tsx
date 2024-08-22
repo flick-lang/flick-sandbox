@@ -43,7 +43,9 @@ export default function Editor({ editorRef, runCode }: EditorProps) {
                             '@default': 'identifier'
                         }
                     }],
-                    [/[A-Z][\w\$]*/, 'type.identifier'],  // to show class names nicely
+
+                    // whitespace
+                    { include: '@whitespace' },
 
                     [/@symbols/, {
                         cases: {
@@ -51,7 +53,11 @@ export default function Editor({ editorRef, runCode }: EditorProps) {
                             '@default': ''
                         }
                     }],
-                ]
+                ],
+                whitespace: [
+                    [/[ \t\r\n]+/, 'white'],
+                    [/\/\/.*$/,    'comment'],
+                ],
             }
         });
     }
