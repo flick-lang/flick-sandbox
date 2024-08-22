@@ -23,7 +23,7 @@ export default function Editor({ editorRef, runCode }: EditorProps) {
             // defaultToken: 'invalid',
 
             keywords: [
-                "pub", "fn", "extern", "if", "while"
+                "pub", "fn", "extern", "if", "while", "else"
             ],
             typeKeywords: [
                 "void"
