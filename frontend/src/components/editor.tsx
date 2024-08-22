@@ -23,7 +23,7 @@ export default function Editor({ editorRef, runCode }: EditorProps) {
             // defaultToken: 'invalid',
 
             keywords: [
-                "pub", "fn", "extern", "if", "while", "else"
+                "pub", "fn", "extern", "if", "while", "else", "ret"
             ],
             typeKeywords: [
                 "void"
@@ -35,6 +35,7 @@ export default function Editor({ editorRef, runCode }: EditorProps) {
 
             tokenizer: {
                 root: [
+                    [/[iu][1-9]\d*/, 'keyword'], // to show signed and unsigned int types
                     [/[a-z_$][\w$]*/, {
                         cases: {
                             '@typeKeywords': 'keyword',
