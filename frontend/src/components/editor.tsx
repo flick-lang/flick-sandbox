@@ -58,7 +58,7 @@ export default function Editor({ editorRef, runCode }: EditorProps) {
                     { include: '@whitespace' },
 
                     // delimiters and operators
-                    [/[{}()\[\]]/, '@brackets'],
+                    [/[{}()]/, '@brackets'],
                     [/[<>](?!@symbols)/, '@brackets'],
                     [/@symbols/, {
                         cases: {
@@ -74,8 +74,21 @@ export default function Editor({ editorRef, runCode }: EditorProps) {
                     [/[ \t\r\n]+/, 'white'],
                     [/\/\/.*$/,    'comment'],
                 ],
-            }
+            }, 
         });
+
+        monaco.languages.setLanguageConfiguration("flick", {
+            autoClosingPairs: [
+                { open: '{', close: '}' },
+                { open: '(', close: ')' },
+                { open: '"', close: '"' },
+                { open: "'", close: "'" },
+            ], 
+            indentationRules: { // From https://github.com/microsoft/monaco-editor/issues/612#issuecomment-344218223
+                decreaseIndentPattern: /^((?!.*?\/\*).*\*\/)?\s*[\}\]\)]/,
+                increaseIndentPattern: /^((?!\/\/).)*(\{[^}"']*|\([^)"']*|\[[^\]"']*)$/,
+            }
+        })
     }
 
     const handleEditorDidMount = (editor: editor.IStandaloneCodeEditor, monaco: Monaco) => {
@@ -84,6 +97,7 @@ export default function Editor({ editorRef, runCode }: EditorProps) {
             minimap: { enabled: false }, // Disable minimap
             contextmenu: false, // Disable context menu (right click)
             quickSuggestions: false, // Disable quick suggestions
+            autoClosingBrackets: "beforeWhitespace",
         });
 
         editorRef.current = editor;
