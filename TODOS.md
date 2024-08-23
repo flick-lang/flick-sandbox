@@ -6,6 +6,9 @@
 
 ## Other Todos
 
+- [ ] Fix ./main does not exist when compiling a "empty" (only docs)
+- [ ] Support exit codes when running the program (not just compiling)
+  - Then, we can also stream the compilatin output
 - [ ] Switch from gcc base image to something like alpine so that the container start up time is faster and size is smaller
 - [ ] Create multiple users to isolate the read/write access of each user. Compiler user should only have read/write/exec access to flick, main.fl, main.o, main. Runner user should have exec i
   - One way to do this is create a "sandbox" group. Two users are part of the sandbox group, compiler and runner. Then chown the sandbox directory to the sandbox group with default permissions 100
@@ -15,4 +18,4 @@
 
 ## Quick Todos
 
-None so far.
+- [ ] Decompose main.py

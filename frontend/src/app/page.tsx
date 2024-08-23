@@ -1,4 +1,4 @@
-"use client" // necessary 
+"use client" 
 
 import { type editor } from 'monaco-editor';
 
@@ -16,17 +16,65 @@ import {
 import React, { useEffect, useState, useRef } from "react";
 
 
+type ResolveRejectTuple = [(value: FlickResponse) => void, (reason: FlickResponse) => void];
+
+type FlickResponse = {
+  stage: "compiling" | "running",
+  description: string,
+  status: "started" | "in_progress" | "success" | "error",
+  output: string | null,
+}
+
+
 export default function Home() {
   const [socket, setSocket] = useState<WebSocket | null>(null)
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const [output, setOutput] = useState("")
+
+  // promises["compiling"] and promises["running"] are promises used to resolve the toast
+  // 
+  // Note: we don't need useState() here, since we don't need React to watch for changes to this record.
+  // This is because the record is changed only when a new toast is generated, which will itself cause
+  // React to re-render / because the record is not something that gets rendered to the user.
+  const promises: Record<string, ResolveRejectTuple> = {}
   
   useEffect(() => {
     const ws = new WebSocket("ws://localhost:8000/ws/compiler")
     setSocket(ws)
 
     ws.onmessage = (event) => {
-      setOutput((prevOutput) => prevOutput + event.data)
+      const response: FlickResponse = JSON.parse(event.data)
+
+      switch (response.status) {
+        case "started":
+          const promise: Promise<FlickResponse> = new Promise((resolve, reject) => {
+            promises[response.stage] = [resolve, reject]
+          })
+
+          toast.promise(promise, {
+            loading: response.description,
+            success: (data: FlickResponse) => {
+              return data.description;
+            },
+            error: (data: FlickResponse) => {
+              return data.description;
+            },
+          })
+
+          setOutput("")
+
+          break
+        case "in_progress":
+          setOutput((prev) => prev + response.output ?? "")
+          break
+        case "success":
+          promises[response.stage][0](response)
+          break
+        case "error":
+          promises[response.stage][1](response)
+          break
+      }
+
     }
 
     ws.onerror = (event) => {
@@ -55,7 +103,6 @@ export default function Home() {
       return
     }
 
-    setOutput("")
     const source = editorRef.current.getValue()
     socket.send(source)
   }
