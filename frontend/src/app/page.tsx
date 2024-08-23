@@ -1,6 +1,7 @@
 "use client" 
 
-import { type editor } from 'monaco-editor';
+import type { editor } from 'monaco-editor';
+import type { InferGetStaticPropsType, GetStaticProps } from 'next'
 
 import { toast } from "sonner"
 
@@ -88,11 +89,6 @@ export default function Home() {
 
 
   const runCode = () => {
-    if (editorRef.current === null) {
-      toast.error("Editor is not initialized")
-      return
-    }
-
     if (socket === null) {
       toast.error("WebSocket is not initialized")
       return

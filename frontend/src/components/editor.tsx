@@ -1,8 +1,10 @@
 'use client'
 
-import { type editor } from 'monaco-editor';
+import { useState } from 'react';
+import { editor } from 'monaco-editor';
 import { type Monaco } from '@monaco-editor/react';
 
+import examples from '@/app/examples';
 import { Editor as MonacoEditor } from '@monaco-editor/react';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,6 +24,8 @@ interface EditorProps {
 }
 
 export default function Editor({ editorRef, runCode }: EditorProps) {
+    const [editorLoaded, setEditorLoaded] = useState(false);
+
     const handleEditorWillMount = (monaco: Monaco) => {
         monaco.languages.register({ id: 'flick' });
 
@@ -91,6 +95,11 @@ export default function Editor({ editorRef, runCode }: EditorProps) {
         })
     }
 
+    const setExample = (title: string) => {
+        const example = examples.find((ex) => ex.title === title)!
+        editorRef.current?.setValue(example.code)
+    }
+
     const handleEditorDidMount = (editor: editor.IStandaloneCodeEditor, monaco: Monaco) => {
         // Disable features for simplicity
         editor.updateOptions({
@@ -100,29 +109,28 @@ export default function Editor({ editorRef, runCode }: EditorProps) {
             autoClosingBrackets: "beforeWhitespace",
         });
 
-        editorRef.current = editor;
+        editorRef.current = editor
+        setEditorLoaded(true)
     }
 
     return (
         <div className="h-full w-full overflow-clip">
             <div className="w-full p-5 flex justify-end gap-5">
-                <Select>
-                    <SelectTrigger className="w-[180px]">
+                <Select onValueChange={(exampleName) => setExample(exampleName)}>
+                    <SelectTrigger disabled={!editorLoaded} className="w-[180px]">
                         <SelectValue placeholder="Select an example" />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="example1">Example 1</SelectItem>
-                        <SelectItem value="example2">Example 2</SelectItem>
-                        <SelectItem value="example3">Example 3</SelectItem>
-                        <SelectItem value="example4">Example 4</SelectItem>
-                        <SelectItem value="example5">Example 5</SelectItem>
+                        {examples.map((example) => (
+                            <SelectItem value={example.title}>{example.title}</SelectItem>
+                        ))}
                     </SelectContent>
                 </Select>
-                <Button onClick={runCode}>
+                <Button disabled={!editorLoaded} onClick={runCode}>
                     Run
                 </Button>
             </div>
-            <MonacoEditor defaultValue="// some comment" defaultLanguage="flick" beforeMount={handleEditorWillMount} onMount={handleEditorDidMount} />
+            <MonacoEditor defaultValue={examples[0].code} defaultLanguage="flick" beforeMount={handleEditorWillMount} onMount={handleEditorDidMount} />
         </div>
     )
 }
