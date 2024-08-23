@@ -32,14 +32,15 @@ export default function Home() {
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const [output, setOutput] = useState("")
 
-  // promises["compiling"] and promises["running"] are promises used to resolve the toast
-  // 
-  // Note: we don't need useState() here, since we don't need React to watch for changes to this record.
-  // This is because the record is changed only when a new toast is generated, which will itself cause
-  // React to re-render / because the record is not something that gets rendered to the user.
-  const promises: Record<string, ResolveRejectTuple> = {}
   
   useEffect(() => {
+    // promises["compiling"] and promises["running"] are promises used to resolve the toast
+    // 
+    // Note: we don't need useState() here, since we don't need React to watch for changes to this record.
+    // This is because the record is changed only when a new toast is generated, which will itself cause
+    // React to re-render / because the record is not something that gets rendered to the user.
+    const promises: Record<string, ResolveRejectTuple> = {}
+
     const ws = new WebSocket("ws://localhost:8000/ws/compiler")
     setSocket(ws)
 
@@ -99,7 +100,8 @@ export default function Home() {
       return
     }
 
-    const source = editorRef.current.getValue()
+    // editorRef won't be null since the Run button is disabled until editor loads
+    const source = editorRef.current!.getValue()
     socket.send(source)
   }
 

@@ -121,8 +121,8 @@ export default function Editor({ editorRef, runCode }: EditorProps) {
                         <SelectValue placeholder="Select an example" />
                     </SelectTrigger>
                     <SelectContent>
-                        {examples.map((example) => (
-                            <SelectItem value={example.title}>{example.title}</SelectItem>
+                        {examples.map((example, index) => (
+                            <SelectItem value={example.title} key={index}>{example.title}</SelectItem>
                         ))}
                     </SelectContent>
                 </Select>

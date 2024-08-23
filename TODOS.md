@@ -20,3 +20,4 @@
 
 - [ ] Decompose main.py
 - [ ] Put real examples
+- [ ] Build before commit (git hook)
