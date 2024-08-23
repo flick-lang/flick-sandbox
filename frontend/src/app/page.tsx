@@ -41,7 +41,8 @@ export default function Home() {
     // React to re-render / because the record is not something that gets rendered to the user.
     const promises: Record<string, ResolveRejectTuple> = {}
 
-    const ws = new WebSocket("ws://localhost:8000/ws/compiler")
+    // The NEXT_PUBLIC_WS_URL should always be defined, whether in .env.production or .env.development
+    const ws = new WebSocket(process.env.NEXT_PUBLIC_WS_URL!)
     setSocket(ws)
 
     ws.onmessage = (event) => {
