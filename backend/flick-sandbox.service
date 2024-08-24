@@ -5,7 +5,6 @@ After=network.target
 [Service]
 User=root
 WorkingDirectory=/home/ec2-user/flick-sandbox/backend
-LimitNOFILE=4096
 ExecStart=/home/ec2-user/.local/bin/poetry run fastapi run --host 127.0.0.1 --port 8000
 Restart=on-failure
 RestartSec=5s
