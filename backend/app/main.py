@@ -11,10 +11,10 @@ from .models import Response, Stage, Status
 app = FastAPI()
 docker_client = docker.from_env()
 
-logger.info("Building image")
-docker_file_path = str(Path(__file__).parent.parent)
-image, _ = docker_client.images.build(path=docker_file_path, tag="flick-compiler")
-logger.info("Done building image")
+# logger.info("Building image")
+# docker_file_path = str(Path(__file__).parent.parent)
+# image, _ = docker_client.images.build(path=docker_file_path, tag="flick-compiler")
+# logger.info("Done building image")
 
 
 async def send_response(websocket: WebSocket, response: Response):
@@ -30,7 +30,7 @@ async def compiler(websocket: WebSocket):
             flick_source = await websocket.receive_text()
 
             container = docker_client.containers.run(
-                image, tty=True, detach=True, network_disabled=True
+                "flick-compiler", tty=True, detach=True, network_disabled=True
             )
 
             try:
