@@ -9,6 +9,7 @@
 
 ## Other Todos
 
+- [ ] Remove dev error message from SSR the Editor with localStorage
 - [ ] Add GitHub Action that rebuilds the Docker image and pushes it to the repo
 - [ ] Add some sort of hook that (when we push) tells our EC2 instance to pull
     and refetch the image / restart the daemon.

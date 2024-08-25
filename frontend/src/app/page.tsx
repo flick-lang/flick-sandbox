@@ -1,7 +1,6 @@
 "use client" 
 
 import type { editor } from 'monaco-editor';
-import type { InferGetStaticPropsType, GetStaticProps } from 'next'
 
 import { toast } from "sonner"
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { editor } from 'monaco-editor';
 import { type Monaco } from '@monaco-editor/react';
 
@@ -113,6 +113,10 @@ export default function Editor({ editorRef, runCode }: EditorProps) {
         setEditorLoaded(true)
     }
 
+    const handleEditorChange = (value: string | undefined, event: editor.IModelContentChangedEvent) => {
+        localStorage.setItem("code", value || "")
+    }
+
     return (
         <div className="h-full w-full overflow-clip">
             <div className="w-full p-5 flex justify-end gap-5">
@@ -130,7 +134,12 @@ export default function Editor({ editorRef, runCode }: EditorProps) {
                     Run
                 </Button>
             </div>
-            <MonacoEditor defaultValue={examples[0].code} defaultLanguage="flick" beforeMount={handleEditorWillMount} onMount={handleEditorDidMount} />
+            <MonacoEditor 
+                value={localStorage.getItem("code") || examples[0].code} 
+                defaultLanguage="flick" 
+                beforeMount={handleEditorWillMount} 
+                onMount={handleEditorDidMount} 
+                onChange={handleEditorChange} />
         </div>
     )
 }
