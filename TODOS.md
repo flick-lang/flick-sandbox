@@ -1,5 +1,6 @@
 ## Roadmap to a working demo!
 
+- [ ] Put real examples
 - [ ] Finish porting the grammar to the syntax highlighting for the monaco editor
 - [ ] Write left sidebar
 - [ ] Load something on mobile (e.g. the sidebar and a thing that says "open on desktop to try the sandbox")
@@ -23,5 +24,4 @@
 ## Quick Todos
 
 - [ ] Decompose main.py
-- [ ] Put real examples
 - [ ] Build before commit (git hook)
