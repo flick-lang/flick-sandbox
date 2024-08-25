@@ -36,10 +36,10 @@ export default function Editor({ editorRef, runCode }: EditorProps) {
             // defaultToken: 'invalid',
 
             keywords: [
-                "pub", "fn", "extern", "if", "while", "else", "ret"
+                "pub", "fn", "extern", "if", "while", "else", "ret", "true", "false"
             ],
             typeKeywords: [
-                "void"
+                "void", "bool"
             ],
             symbols:  /[=><!+\-*\/]+/,
             operators: [
