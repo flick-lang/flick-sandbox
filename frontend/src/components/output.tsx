@@ -12,10 +12,9 @@ export default function Output({ contents }: OutputProps) {
         <div className="h-full w-full">
             <ScrollArea className="h-full w-full">
                 <ScrollArea className="h-full w-full">
-                    <div className="w-max h-max whitespace-pre p-3">
-                        {contents}
-                    </div>
-                    {/* <ScrollBar orientation="vertical" /> */}
+                    <pre className="w-max h-max p-3">
+                        <code>{contents}</code>
+                    </pre>
                 </ScrollArea>
                 <ScrollBar orientation="horizontal" />
             </ScrollArea>
