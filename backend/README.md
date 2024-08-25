@@ -22,8 +22,6 @@ git clone https://github.com/flick-lang/flick-sandbox
 cd flick-sandbox/backend
 
 poetry install --no-root
-
-poetry config virtualenvs.in-project true
 ```
 
 Then, pull the docker image from AWS Elastic Container Registry:

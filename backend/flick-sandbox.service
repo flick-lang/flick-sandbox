@@ -3,7 +3,7 @@ Description=The Flick Sandbox
 After=network.target
 
 [Service]
-User=root
+User=ec2-user
 WorkingDirectory=/home/ec2-user/flick-sandbox/backend
 ExecStart=/home/ec2-user/.local/bin/poetry run fastapi run --host 127.0.0.1 --port 8000
 Restart=on-failure
