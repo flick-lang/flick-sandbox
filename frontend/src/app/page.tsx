@@ -2,9 +2,10 @@
 
 import type { editor } from 'monaco-editor';
 
+import dynamic from "next/dynamic"
 import { toast } from "sonner"
 
-import Editor from "@/components/editor"
+const Editor = dynamic(() => import('@/components/editor'), { ssr: false })
 import Sidebar from "@/components/sidebar"
 import Output from "@/components/output"
 
