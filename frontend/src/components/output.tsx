@@ -1,23 +1,18 @@
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 
-
-
 interface OutputProps {
-    contents: string;
+    contents: string
 }
-
 
 export default function Output({ contents }: OutputProps) {
     return (
-        <div className="h-full w-full">
+        <ScrollArea className="h-full w-full">
             <ScrollArea className="h-full w-full">
-                <ScrollArea className="h-full w-full">
-                    <pre className="w-max h-max p-3">
-                        <code>{contents}</code>
-                    </pre>
-                </ScrollArea>
-                <ScrollBar orientation="horizontal" />
+                <pre className="w-max h-max p-3">
+                    <code>{contents}</code>
+                </pre>
             </ScrollArea>
-        </div>
+            <ScrollBar orientation="horizontal" />
+        </ScrollArea>
     )
 }

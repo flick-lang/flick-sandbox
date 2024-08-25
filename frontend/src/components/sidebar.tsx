@@ -1,5 +1,3 @@
-import React, { useState } from 'react';
-
 export default function Sidebar() {
   return (
     <div className="flex flex-col h-full p-6">
@@ -10,5 +8,5 @@ export default function Sidebar() {
             Flick Sandbox
         </h1>
     </div>
-  );
-};
+  )
+}

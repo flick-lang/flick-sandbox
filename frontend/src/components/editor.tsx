@@ -1,18 +1,14 @@
-'use client'
+import { useState, useEffect } from 'react'
+import { editor } from 'monaco-editor'
+import { type Monaco } from '@monaco-editor/react'
 
-import { useState, useEffect } from 'react';
-import { editor } from 'monaco-editor';
-import { type Monaco } from '@monaco-editor/react';
-
-import examples from '@/app/examples';
-import { Editor as MonacoEditor } from '@monaco-editor/react';
-import { Button } from '@/components/ui/button';
+import examples from '@/app/examples'
+import { Editor as MonacoEditor } from '@monaco-editor/react'
+import { Button } from '@/components/ui/button'
 import {
     Select,
     SelectContent,
-    SelectGroup,
     SelectItem,
-    SelectLabel,
     SelectTrigger,
     SelectValue,
   } from "@/components/ui/select"
@@ -24,10 +20,11 @@ interface EditorProps {
 }
 
 export default function Editor({ editorRef, runCode }: EditorProps) {
-    const [editorLoaded, setEditorLoaded] = useState(false);
+    const [editorLoaded, setEditorLoaded] = useState(false)
+    const [editorValue, setEditorValue] = useState<string>(examples[0].code)
 
     const handleEditorWillMount = (monaco: Monaco) => {
-        monaco.languages.register({ id: 'flick' });
+        monaco.languages.register({ id: 'flick' })
 
         // Register a tokens provider for the language
         // see: https://microsoft.github.io/monaco-editor/monarch.html
@@ -79,7 +76,7 @@ export default function Editor({ editorRef, runCode }: EditorProps) {
                     [/\/\/.*$/,    'comment'],
                 ],
             }, 
-        });
+        })
 
         monaco.languages.setLanguageConfiguration("flick", {
             autoClosingPairs: [
@@ -107,7 +104,7 @@ export default function Editor({ editorRef, runCode }: EditorProps) {
             contextmenu: false, // Disable context menu (right click)
             quickSuggestions: false, // Disable quick suggestions
             autoClosingBrackets: "beforeWhitespace",
-        });
+        })
 
         editorRef.current = editor
         setEditorLoaded(true)
@@ -116,6 +113,10 @@ export default function Editor({ editorRef, runCode }: EditorProps) {
     const handleEditorChange = (value: string | undefined, event: editor.IModelContentChangedEvent) => {
         localStorage.setItem("code", value || "")
     }
+
+    useEffect(() => {
+        setEditorValue((prev) => localStorage.getItem("code") || prev)
+    }, [])
 
     return (
         <div className="h-full w-full overflow-clip">
@@ -135,7 +136,7 @@ export default function Editor({ editorRef, runCode }: EditorProps) {
                 </Button>
             </div>
             <MonacoEditor 
-                value={localStorage.getItem("code") || examples[0].code} 
+                value={editorValue} 
                 defaultLanguage="flick" 
                 beforeMount={handleEditorWillMount} 
                 onMount={handleEditorDidMount} 

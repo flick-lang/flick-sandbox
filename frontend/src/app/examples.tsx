@@ -1,6 +1,6 @@
 interface Example {
-    title: string;
-    code: string;
+    title: string
+    code: string
 }
 
 const examples: Example[] = [

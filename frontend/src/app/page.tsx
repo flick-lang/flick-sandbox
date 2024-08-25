@@ -1,11 +1,11 @@
-"use client" 
+"use client"
 
-import type { editor } from 'monaco-editor';
+import type { editor } from 'monaco-editor'
 
-import dynamic from "next/dynamic"
+import { useEffect, useState, useRef } from "react"
 import { toast } from "sonner"
 
-const Editor = dynamic(() => import('@/components/editor'), { ssr: false })
+import Editor from "@/components/editor"
 import Sidebar from "@/components/sidebar"
 import Output from "@/components/output"
 
@@ -14,10 +14,9 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable"
-import React, { useEffect, useState, useRef } from "react";
 
 
-type ResolveRejectTuple = [(value: FlickResponse) => void, (reason: FlickResponse) => void];
+type ResolveRejectTuple = [(value: FlickResponse) => void, (reason: FlickResponse) => void]
 
 type FlickResponse = {
   stage: "compiling" | "running",
@@ -28,8 +27,8 @@ type FlickResponse = {
 
 
 export default function Home() {
-  const [socket, setSocket] = useState<WebSocket | null>(null)
-  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
+  const socket = useRef<WebSocket | null>(null)
+  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
   const [output, setOutput] = useState("")
 
   
@@ -43,7 +42,7 @@ export default function Home() {
 
     // The NEXT_PUBLIC_WS_URL should always be defined, whether in .env.production or .env.development
     const ws = new WebSocket(process.env.NEXT_PUBLIC_WS_URL!)
-    setSocket(ws)
+    socket.current = ws
 
     ws.onmessage = (event) => {
       const response: FlickResponse = JSON.parse(event.data)
@@ -57,10 +56,10 @@ export default function Home() {
           toast.promise(promise, {
             loading: response.description,
             success: (data: FlickResponse) => {
-              return data.description;
+              return data.description
             },
             error: (data: FlickResponse) => {
-              return data.description;
+              return data.description
             },
           })
 
@@ -91,19 +90,19 @@ export default function Home() {
 
 
   const runCode = () => {
-    if (socket === null) {
+    if (socket.current === null) {
       toast.error("WebSocket is not initialized")
       return
     }
 
-    if (socket.readyState !== WebSocket.OPEN) {
+    if (socket.current.readyState !== WebSocket.OPEN) {
       toast.error("WebSocket connection is not open")
       return
     }
 
     // editorRef won't be null since the Run button is disabled until editor loads
     const source = editorRef.current!.getValue()
-    socket.send(source)
+    socket.current.send(source)
   }
 
 
@@ -126,5 +125,5 @@ export default function Home() {
         </ResizablePanelGroup>
       </ResizablePanel>
     </ResizablePanelGroup>
-  );
+  )
 }
