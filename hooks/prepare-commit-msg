@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+
+if ! (cd frontend && npm run build); then
+    echo "npm run build failed; aborting commit"
+    exit 1
+fi
+
+echo "All checks passed. Committing..."
