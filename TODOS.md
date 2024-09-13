@@ -4,6 +4,7 @@
 - [ ] Finish porting the grammar to the syntax highlighting for the monaco editor
 - [ ] Write left sidebar
 - [ ] Load something on mobile (e.g. the sidebar and a thing that says "open on desktop to try the sandbox")
+- [ ] Get Docker image repo working and make sure that local (and server) always fetch latest image
 - [x] Create simple but nice UI
 - [x] Deploy to AWS
 
