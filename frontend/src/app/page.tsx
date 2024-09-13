@@ -108,11 +108,11 @@ export default function Home() {
 
   return (
     <ResizablePanelGroup direction="horizontal" className="min-h-screen">
-      <ResizablePanel defaultSize={20} maxSize={30}>
+      <ResizablePanel defaultSize={24} maxSize={30}>
         <Sidebar />
       </ResizablePanel>
       <ResizableHandle className="w-0.5" />
-      <ResizablePanel defaultSize={80}>
+      <ResizablePanel defaultSize={76}>
         <ResizablePanelGroup direction="vertical">
           <ResizablePanel defaultSize={75} minSize={30}>
             <Editor editorRef={editorRef} runCode={runCode} />
