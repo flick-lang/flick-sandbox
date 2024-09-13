@@ -12,7 +12,7 @@ export default function Sidebar() {
         <h2 className="font-semibold text-xl mb-2">Getting Started</h2>
         <ol className="list-decimal list-inside text-sm space-y-2">
           <li>Choose an example from the dropdown menu.</li>
-          <li>Click "Run" to execute your program.</li>
+          <li>Click &quot;Run&quot; to execute your program.</li>
           <li>View the output in the console below the code editor.</li>
         </ol>
       </section>
