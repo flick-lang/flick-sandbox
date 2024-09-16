@@ -1,0 +1,43 @@
+services:
+  watchtower:
+    image: containrrr/watchtower:latest
+    command:
+      - "--label-enable"
+      - "--interval"
+      - "60"
+      - "--rolling-restart"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    restart: always
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: /run/secrets/tunnel_token
+    networks:
+      - flick-internal
+      - flick-external
+  backend:
+    image: ghcr.io/flick-lang/flick-sandbox-backend:latest
+    ports:
+      - 8000:8000
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - flick-internal
+    restart: always
+  compiler:
+    image: ghcr.io/flick-lang/flick-compiler:latest
+    deploy:
+      replicas: 0
+
+secrets:
+  tunnel_token:
+    file: ./tunnel_token.txt
+
+networks:
+  flick-internal:
+    driver: bridge
+    internal: true
+  flick-external:
+    driver: bridge
