@@ -1,29 +1,26 @@
-FROM rust AS build
+# Use latest slim python
+FROM python:slim
 
-WORKDIR /sandbox
+# Set the working directory
+WORKDIR /app
 
-RUN apt-get update && apt-get install -y lsb-release software-properties-common wget git
-RUN wget https://apt.llvm.org/llvm.sh && chmod +x llvm.sh && ./llvm.sh 18 all
+# Make it so that Poetry installs all requirements globally
+ENV POETRY_VIRTUALENVS_CREATE=false
 
-ADD https://api.github.com/repos/flick-lang/flick/git/refs/heads/main version.json
-RUN git clone https://github.com/flick-lang/flick.git
+# Install Poetry
+RUN pip install poetry
 
-WORKDIR /sandbox/flick
-RUN cargo build --release
+# Copy over the requirements specifications
+COPY poetry.lock pyproject.toml ./
 
-FROM gcc
+# Install Poetry dependencies
+RUN poetry install --no-interaction
 
-# We create a sandbox user, without root privileges
-RUN useradd -m sandbox -d /sandbox
+# Copy the rest of the project
+COPY . .
 
-# We also lock the root account by setting an invalid password. Source: Rust Playground
-# https://github.com/rust-lang/rust-playground/blob/main/compiler/base/Dockerfile
-RUN usermod -p '!!' root
+# Expose the port that the FastAPI server will run on
+EXPOSE 8000
 
-USER sandbox
-WORKDIR /sandbox
-
-# Get `flick` executable from the build image
-COPY --from=build /sandbox/flick/target/release/flick ./flick
-
-ENTRYPOINT ["/bin/sh"]
+# Run the main server
+CMD ["fastapi", "run", "--host", "127.0.0.1", "--port", "8000"]
