@@ -67,7 +67,7 @@ export default function Home() {
 
           break
         case "in_progress":
-          setOutput((prev) => prev + response.output ?? "")
+          setOutput((prev) => prev + (response.output ?? ""))
           break
         case "success":
           promises[response.stage][0](response)
