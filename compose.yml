@@ -26,7 +26,7 @@ services:
     networks:
       - flick-internal
     restart: always
-  compiler:
+  flick-compiler:
     image: ghcr.io/flick-lang/flick-compiler:latest
     deploy:
       replicas: 0
