@@ -35,4 +35,4 @@ networks:
   flick-internal:
     driver: bridge
   flick-external:
-    driver: host
+    driver: bridge
