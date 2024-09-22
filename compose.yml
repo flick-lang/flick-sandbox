@@ -33,6 +33,6 @@ services:
 
 networks:
   flick-internal:
-    driver: bridge
+    internal: true
   flick-external:
     driver: bridge
