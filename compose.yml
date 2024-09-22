@@ -11,9 +11,9 @@ services:
   tunnel:
     image: cloudflare/cloudflared:latest
     restart: always
-    command: tunnel run
     environment:
-      TUNNEL_TOKEN: /run/secrets/tunnel_token
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
+    command: tunnel run
     networks:
       - flick-internal
       - flick-external
@@ -31,13 +31,8 @@ services:
     deploy:
       replicas: 0
 
-secrets:
-  tunnel_token:
-    file: ./tunnel_token.txt
-
 networks:
   flick-internal:
     driver: bridge
-    internal: true
   flick-external:
-    driver: bridge
+    driver: host
