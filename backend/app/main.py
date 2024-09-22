@@ -30,7 +30,7 @@ async def compiler(websocket: WebSocket):
             flick_source = await websocket.receive_text()
 
             container = docker_client.containers.run(
-                "flick-compiler", tty=True, detach=True, network_disabled=True
+                "ghcr.io/flick-lang/flick-compiler", tty=True, detach=True, network_disabled=True
             )
 
             try:
