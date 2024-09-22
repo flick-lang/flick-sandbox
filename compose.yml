@@ -2,10 +2,8 @@ services:
   watchtower:
     image: containrrr/watchtower:latest
     command:
-      - "--label-enable"
       - "--interval"
       - "60"
-      - "--rolling-restart"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
   tunnel:
