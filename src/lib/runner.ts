@@ -20,8 +20,9 @@ const MAX_CODE_BYTES = 64 * 1024;
 
 const dim = (text: string) => `\x1b[2m${text}\x1b[0m`;
 
-// $1 is the code. The old binary is removed because the compiler can fail without a non-zero exit.
-const SCRIPT = `printf %s "$1" > main.fl; rm -f main; printf '${dim('Compiling…')}\\n'; ./flick main.fl && printf '${dim('Running…')}\\n' && ./main`;
+// $1 is the code. The image has only a shell and flick, so the script sticks to builtins. flick exits
+// non-zero when a compile fails, so a ./main left by an earlier run is never started.
+const SCRIPT = `printf %s "$1" > main.fl; printf '${dim('Compiling…')}\\n'; flick main.fl && printf '${dim('Running…')}\\n' && ./main`;
 
 // ANSI colours tuned for each background; xterm's defaults assume a dark one.
 const ANSI = {

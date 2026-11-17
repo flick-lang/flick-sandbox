@@ -5,7 +5,7 @@ extern fn putchar(u8 c) u8
 
 pub fn main() u8 {
     u3 counter = 0
-    u8 printed = 0
+    u64 printed = 0
     while printed < 12 {
         putchar(48 + (u8) counter)
         putchar(32) // space

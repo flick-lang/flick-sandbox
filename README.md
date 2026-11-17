@@ -35,21 +35,16 @@ pnpm dlx vercel env pull  # writes VERCEL_OIDC_TOKEN to .env.local; expires afte
 pnpm dev
 ```
 
-Add the compiler image to `.env.local` as well:
-
-```sh
-FLICK_SANDBOX_IMAGE=<repository>[:tag]
-```
-
 `pnpm check` type-checks the project and `pnpm build` builds it.
 
 ## Deployment
 
 ### Compiler image
 
-`FLICK_SANDBOX_IMAGE` names an image in Vercel Container Registry, and must be set in the Vercel project's environment variables. `/api/sandbox` refuses to create a sandbox without it. The image must:
+Sandboxes start from `flick:v2` in Vercel Container Registry, set as `IMAGE` in `src/pages/api/sandbox.ts`. To ship a new compiler, push a new tag and update `IMAGE`. The image must:
 
-- have the `flick` compiler in its working directory, since runs execute `./flick main.fl && ./main` there
+- have `flick` on its `PATH` and a writable working directory, since runs execute `flick main.fl && ./main` there
+- exit non-zero from `flick` when a compile fails; the run script uses only shell builtins, so it can't clear out an old `main` first
 - not install `sudo`
 - need no network access
 
