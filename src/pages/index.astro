@@ -1,16 +1,146 @@
 ---
+import ThemeToggle from '@/components/ThemeToggle.astro';
+import { examples } from '@/examples';
+import Layout from '@/layouts/Layout.astro';
+
+// Spacing tightens below sm so the whole header fits a 360px phone.
+const button =
+  'inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg px-2 font-medium whitespace-nowrap hover:bg-hover hover:text-fg sm:px-2.5';
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<Layout title="Flick Sandbox">
+  <Fragment slot="actions">
+    <button class:list={[button, 'border border-line [anchor-name:--examples-button]']} popovertarget="examples">
+      Examples
+      <svg viewBox="0 0 16 16" class="size-3 max-sm:hidden" aria-hidden="true">
+        <path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"></path>
+      </svg>
+    </button>
+    <!-- Sits at a fixed spot under the header where anchor positioning is unsupported. -->
+    <div
+      id="examples"
+      popover
+      class="inset-auto top-13 left-3 m-0 w-80 max-w-[calc(100vw-1.5rem)] rounded-lg border border-line bg-raised p-1 shadow-xl dark:shadow-black/40 [position-anchor:--examples-button] supports-[top:anchor(bottom)]:top-[calc(anchor(bottom)+0.375rem)] supports-[top:anchor(bottom)]:left-[anchor(left)]"
+    >
+      {
+        examples.map((example, index) => (
+          <button data-example={index} class="block w-full cursor-pointer rounded-md px-2.5 py-2 text-left text-[0.8125rem] text-muted hover:bg-hover">
+            <strong class="block text-sm font-medium text-fg">{example.name}</strong>
+            {example.description}
+          </button>
+        ))
+      }
+    </div>
+
+    <span class="flex-1"></span>
+    <!-- Site-level controls, then a separator, then the actions on the current code. -->
+    <a class:list={[button, 'text-muted']} href="/about">About</a>
+    <ThemeToggle />
+    <span class="h-5 w-px bg-line max-sm:hidden" aria-hidden="true"></span>
+    <button class:list={[button, 'text-muted']} id="share">Share</button>
+    <button
+      id="run"
+      class="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg bg-primary px-3 font-medium text-white hover:bg-primary/90 data-running:bg-fg data-running:text-surface"
+    >
+      <span>Run</span><kbd class="font-sans text-xs opacity-70 max-md:hidden"></kbd>
+    </button>
+  </Fragment>
+
+  <!-- Stacked on phones; side by side from md, with the editor's share of the width in --split. -->
+  <main class="grid h-[calc(100dvh-3rem)] grid-rows-[55%_1px_1fr] *:min-h-0 *:min-w-0 md:grid-cols-[calc(var(--split,0.55)*100%)_1px_1fr] md:grid-rows-none">
+    <section id="editor" aria-label="Editor"></section>
+    <!-- The ::before widens the 1px line into a comfortable drag target. -->
+    <div
+      id="divider"
+      role="separator"
+      aria-orientation="vertical"
+      aria-label="Resize editor and terminal"
+      tabindex="0"
+      class="relative z-10 touch-none bg-line max-md:pointer-events-none md:cursor-col-resize md:before:absolute md:before:inset-y-0 md:before:-inset-x-1 md:hover:bg-primary md:hover:outline-2 md:hover:outline-primary md:active:outline-2 md:active:outline-primary"
+    >
+    </div>
+    <section class="bg-sunken py-3 pl-4 font-mono" aria-label="Terminal"><div id="terminal" class="h-full"></div></section>
+  </main>
+</Layout>
+
+<script>
+  import { examples } from '@/examples';
+  import { createEditor, setCode } from '@/lib/editor';
+  import { createRunner } from '@/lib/runner';
+  import { saveCode, savedCode, shareUrl, sharedCode } from '@/lib/share';
+
+  const main = document.querySelector('main')!;
+  const divider = document.getElementById('divider')!;
+  const examplesPopover = document.getElementById('examples')!;
+  const shareButton = document.getElementById('share')!;
+  const runButton = document.getElementById('run')!;
+
+  const editor = createEditor(
+    document.getElementById('editor')!,
+    (await sharedCode()) ?? savedCode() ?? examples[0].code,
+    (code) => {
+      saveCode(code);
+      // A leftover share link would override the saved code on the next load.
+      if (location.hash) history.replaceState(null, '', location.pathname);
+    },
+  );
+
+  // xterm measures its cell size once, so the font has to be ready before it opens.
+  const terminal = document.getElementById('terminal')!;
+  await document.fonts.load(`13px ${getComputedStyle(terminal).fontFamily}`);
+  const runner = createRunner(terminal, (running) => {
+    runButton.toggleAttribute('data-running', running);
+    runButton.firstElementChild!.textContent = running ? 'Stop' : 'Run';
+  });
+  const run = () => runner.start(editor.state.doc.toString());
+
+  runButton.querySelector('kbd')!.textContent = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘↵' : 'Ctrl ↵';
+  runButton.addEventListener('click', () => (runButton.hasAttribute('data-running') ? runner.stop() : run()));
+
+  // Captured at the document so the shortcut also works while the terminal has focus.
+  document.addEventListener(
+    'keydown',
+    (event) => {
+      if (event.key !== 'Enter' || !(event.metaKey || event.ctrlKey)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      run();
+    },
+    { capture: true },
+  );
+
+  examplesPopover.addEventListener('click', (event) => {
+    const item = (event.target as Element).closest<HTMLElement>('[data-example]');
+    if (!item) return;
+    setCode(editor, examples[Number(item.dataset.example)].code);
+    examplesPopover.hidePopover();
+    editor.focus();
+  });
+
+  shareButton.addEventListener('click', async () => {
+    const url = await shareUrl(editor.state.doc.toString());
+    history.replaceState(null, '', url);
+    const copied = await navigator.clipboard.writeText(url).then(
+      () => true,
+      () => false,
+    );
+    shareButton.textContent = copied ? 'Link copied' : 'Link is in the address bar';
+    setTimeout(() => (shareButton.textContent = 'Share'), 2000);
+  });
+
+  let split = 0.55;
+  const setSplit = (value: number) => {
+    split = Math.min(0.8, Math.max(0.2, value));
+    main.style.setProperty('--split', String(split));
+  };
+  divider.addEventListener('pointerdown', (event) => divider.setPointerCapture(event.pointerId));
+  divider.addEventListener('pointermove', (event) => {
+    if (!divider.hasPointerCapture(event.pointerId)) return;
+    const { left, width } = main.getBoundingClientRect();
+    setSplit((event.clientX - left) / width);
+  });
+  divider.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowLeft') setSplit(split - 0.02);
+    if (event.key === 'ArrowRight') setSplit(split + 0.02);
+  });
+</script>

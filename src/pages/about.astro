@@ -1,0 +1,34 @@
+---
+import { LIFETIME_MS } from '@/consts';
+import Layout from '@/layouts/Layout.astro';
+---
+
+<Layout title="About Flick">
+  <!-- The code modifiers replace the plugin's default backticks with a tinted pill. -->
+  <main
+    class="mx-auto prose px-6 py-12 prose-slate dark:prose-neutral dark:prose-invert prose-a:text-accent prose-code:rounded prose-code:bg-hover prose-code:px-1 prose-code:py-0.5 prose-code:font-normal prose-code:before:content-none prose-code:after:content-none"
+  >
+    <h1>About Flick</h1>
+    <p>
+      Flick is a programming language we created to explore compiler design. The compiler is open source at{' '}
+      <a href="https://github.com/flick-lang/flick">github.com/flick-lang/flick</a>.
+    </p>
+    <p>
+      This sandbox lets you try Flick without installing the compiler. Each run compiles and runs your program on a
+      fresh, isolated machine with no network access, and stops after {LIFETIME_MS / 1000} seconds.
+    </p>
+
+    <h2>Key language features</h2>
+    <ul>
+      <li>Static typing with type inference</li>
+      <li>Functions, and <code>extern fn</code> declarations for calling C functions</li>
+      <li>Simple control flow: <code>if</code>/<code>else</code> and <code>while</code> loops</li>
+      <li>Integers of any width, such as <code>u8</code> and <code>i11</code></li>
+    </ul>
+
+    <h2>Authors</h2>
+    <p>Flick was created by Max Larsson and Thomas Breydo.</p>
+
+    <p><a href="/">Back to the sandbox</a></p>
+  </main>
+</Layout>
