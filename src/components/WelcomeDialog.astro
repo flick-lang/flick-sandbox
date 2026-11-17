@@ -1,0 +1,38 @@
+<!-- The padding lives on the inner div so a click on the dialog element itself is a click on the backdrop. -->
+<dialog
+  id="welcome"
+  aria-labelledby="welcome-title"
+  class="m-auto w-[min(28rem,calc(100vw-2rem))] rounded-xl border border-line bg-raised text-fg shadow-2xl backdrop:bg-black/40"
+>
+  <div class="p-6">
+    <h2 id="welcome-title" class="text-lg font-semibold tracking-tight">Welcome to the Flick Sandbox</h2>
+    <p class="mt-2 text-muted">
+      Flick is a small compiled language we built to explore compiler design. Use this sandbox to write and run Flick
+      programs!
+    </p>
+    <ul class="mt-4 list-disc space-y-1.5 pl-5 text-muted marker:text-faint">
+      <li><strong class="font-medium text-fg">Run</strong> compiles and runs your code.</li>
+      <li><strong class="font-medium text-fg">Examples</strong> loads a sample program.</li>
+    </ul>
+    <form method="dialog" class="mt-6 flex items-center justify-between">
+      <a class="text-accent hover:underline" href="https://github.com/flick-lang/flick" target="_blank" rel="noreferrer">More about Flick</a>
+      <button autofocus class="h-8 cursor-pointer rounded-lg bg-primary px-3 font-medium text-white hover:bg-primary/90">Start coding</button>
+    </form>
+  </div>
+</dialog>
+
+<script>
+  import { WELCOME_KEY } from '@/consts';
+
+  const welcome = document.getElementById('welcome') as HTMLDialogElement;
+  welcome.addEventListener('click', (event) => event.target === welcome && welcome.close());
+
+  // Shown once, but never over a shared link, which someone opened to see that code. When storage
+  // is blocked the welcome is skipped rather than shown on every visit.
+  try {
+    if (!location.hash && !localStorage.getItem(WELCOME_KEY)) {
+      welcome.showModal();
+      localStorage.setItem(WELCOME_KEY, '1');
+    }
+  } catch {}
+</script>

@@ -1,8 +1,4 @@
 @import "tailwindcss";
-@plugin "@tailwindcss/typography";
-
-/* The theme is the data-theme attribute on <html>, set before first paint by Layout.astro. */
-@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 /*
  * Colours are semantic and flip with the theme, so markup rarely needs dark: variants.
@@ -12,7 +8,7 @@
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
 
-  --color-primary: hsl(221.2 83.2% 53.3%);
+  --color-primary: #2563eb;
   --color-accent: #2563eb;
 
   --color-surface: #ffffff;
@@ -27,7 +23,10 @@
 }
 
 @layer base {
+  /* The theme follows the system; Tailwind's dark: variant uses the same media query. */
   :root {
+    color-scheme: light dark;
+
     --selection: #dbeafe;
     --active-line: #f8fafc;
 
@@ -35,33 +34,35 @@
     --syntax-type: #0f766e;
     --syntax-number: #b45309;
     --syntax-string: #15803d;
-    --syntax-operator: #475569;
+    --syntax-operator: var(--color-muted);
     --syntax-comment: #64748b;
   }
 
   /* Neutral greys: the blue is kept for the accent only. */
-  [data-theme="dark"] {
-    --color-accent: #60a5fa;
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-accent: #60a5fa;
 
-    --color-surface: #171717;
-    --color-sunken: #101010;
-    --color-raised: #232323;
-    --color-hover: #ffffff14;
-    --color-line: #2a2a2a;
+      --color-surface: #171717;
+      --color-sunken: #101010;
+      --color-raised: #232323;
+      --color-hover: #ffffff14;
+      --color-line: #2a2a2a;
 
-    --color-fg: #e5e5e5;
-    --color-muted: #a3a3a3;
-    --color-faint: #5c5c5c;
+      --color-fg: #e5e5e5;
+      --color-muted: #a3a3a3;
+      --color-faint: #5c5c5c;
 
-    --selection: #3b82f64d;
-    --active-line: #ffffff0a;
+      --selection: #3b82f64d;
+      --active-line: #ffffff0a;
 
-    --syntax-keyword: #7aa7ff;
-    --syntax-type: #5ccfc0;
-    --syntax-number: #f0b563;
-    --syntax-string: #8fd19e;
-    --syntax-operator: #a3a3a3;
-    --syntax-comment: #808080;
+      --syntax-keyword: #7aa7ff;
+      --syntax-type: #5ccfc0;
+      --syntax-number: #f0b563;
+      --syntax-string: #8fd19e;
+      --syntax-operator: var(--color-muted);
+      --syntax-comment: #808080;
+    }
   }
 
   :focus-visible {

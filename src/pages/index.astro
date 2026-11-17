@@ -1,67 +1,85 @@
 ---
-import ThemeToggle from '@/components/ThemeToggle.astro';
+import { Font } from 'astro:assets';
+import WelcomeDialog from '@/components/WelcomeDialog.astro';
 import { examples } from '@/examples';
-import Layout from '@/layouts/Layout.astro';
+import '@/styles/global.css';
 
-// Spacing tightens below sm so the whole header fits a 360px phone.
 const button =
-  'inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg px-2 font-medium whitespace-nowrap hover:bg-hover hover:text-fg sm:px-2.5';
+  'inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg px-2.5 font-medium whitespace-nowrap hover:bg-hover hover:text-fg';
 ---
 
-<Layout title="Flick Sandbox">
-  <Fragment slot="actions">
-    <button class:list={[button, 'border border-line [anchor-name:--examples-button]']} popovertarget="examples">
-      Examples
-      <svg viewBox="0 0 16 16" class="size-3 max-sm:hidden" aria-hidden="true">
-        <path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"></path>
-      </svg>
-    </button>
-    <!-- Sits at a fixed spot under the header where anchor positioning is unsupported. -->
-    <div
-      id="examples"
-      popover
-      class="inset-auto top-13 left-3 m-0 w-80 max-w-[calc(100vw-1.5rem)] rounded-lg border border-line bg-raised p-1 shadow-xl dark:shadow-black/40 [position-anchor:--examples-button] supports-[top:anchor(bottom)]:top-[calc(anchor(bottom)+0.375rem)] supports-[top:anchor(bottom)]:left-[anchor(left)]"
-    >
-      {
-        examples.map((example, index) => (
-          <button data-example={index} class="block w-full cursor-pointer rounded-md px-2.5 py-2 text-left text-[0.8125rem] text-muted hover:bg-hover">
-            <strong class="block text-sm font-medium text-fg">{example.name}</strong>
-            {example.description}
-          </button>
-        ))
-      }
-    </div>
+<html lang="en" class="bg-surface font-sans text-fg antialiased">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Write and run Flick programs in your browser." />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Flick Sandbox</title>
+    <Font cssVariable="--font-inter" preload />
+    <Font cssVariable="--font-jetbrains-mono" />
+  </head>
+  <!-- text-sm is on body because on html it would shrink the rem, and with it every other size. -->
+  <body class="text-sm">
+    <header class="flex h-12 items-center gap-2 border-b border-line px-3">
+      <h1 class="mr-2 text-[0.9375rem] font-semibold tracking-tight">Flick <span class="font-normal text-muted">Sandbox</span></h1>
+      <button class:list={[button, 'border border-line [anchor-name:--examples-button]']} popovertarget="examples">
+        Examples
+        <svg viewBox="0 0 16 16" class="size-3" aria-hidden="true">
+          <path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+      </button>
+      <!-- Sits at a fixed spot under the header where anchor positioning is unsupported. -->
+      <div
+        id="examples"
+        popover
+        class="inset-auto top-13 left-3 m-0 w-80 max-w-[calc(100vw-1.5rem)] rounded-lg border border-line bg-raised p-1 shadow-xl dark:shadow-black/40 [position-anchor:--examples-button] supports-[top:anchor(bottom)]:top-[calc(anchor(bottom)+0.375rem)] supports-[top:anchor(bottom)]:left-[anchor(left)]"
+      >
+        {
+          examples.map((example, index) => (
+            <button data-example={index} class="block w-full cursor-pointer rounded-md px-2.5 py-2 text-left text-[0.8125rem] text-muted hover:bg-hover">
+              <strong class="block text-sm font-medium text-fg">{example.name}</strong>
+              {example.description}
+            </button>
+          ))
+        }
+      </div>
+      <button class:list={[button, 'ml-auto text-muted']} id="share">Share</button>
+      <button
+        id="run"
+        class="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg bg-primary px-3 font-medium text-white hover:bg-primary/90 data-running:bg-fg data-running:text-surface"
+      >
+        <!-- Phones have no keyboard, so the shortcut hint is hidden there. -->
+        <span>Run</span><kbd class="font-sans text-xs opacity-70 max-md:hidden"></kbd>
+      </button>
+    </header>
 
-    <span class="flex-1"></span>
-    <!-- Site-level controls, then a separator, then the actions on the current code. -->
-    <a class:list={[button, 'text-muted']} href="/about">About</a>
-    <ThemeToggle />
-    <span class="h-5 w-px bg-line max-sm:hidden" aria-hidden="true"></span>
-    <button class:list={[button, 'text-muted']} id="share">Share</button>
-    <button
-      id="run"
-      class="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg bg-primary px-3 font-medium text-white hover:bg-primary/90 data-running:bg-fg data-running:text-surface"
-    >
-      <span>Run</span><kbd class="font-sans text-xs opacity-70 max-md:hidden"></kbd>
-    </button>
-  </Fragment>
+    <!-- Stacked on phones; side by side from md, with the editor's share of the width in --split. -->
+    <main class="grid h-[calc(100dvh-3rem)] grid-rows-[55%_1px_1fr] *:min-h-0 *:min-w-0 md:grid-cols-[calc(var(--split,0.55)*100%)_1px_1fr] md:grid-rows-none">
+      <section id="editor" class="relative" aria-label="Editor">
+        <button
+          id="help"
+          aria-label="Show the welcome"
+          class="absolute right-3 bottom-3 z-10 size-8 cursor-pointer rounded-full border border-line bg-raised font-medium text-muted shadow-sm hover:text-fg"
+        >
+          ?
+        </button>
+      </section>
+      <!-- The ::before widens the 1px line into a comfortable drag target. -->
+      <div
+        id="divider"
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize editor and terminal"
+        tabindex="0"
+        class="relative z-10 touch-none bg-line max-md:pointer-events-none md:cursor-col-resize md:before:absolute md:before:inset-y-0 md:before:-inset-x-1 md:hover:bg-primary md:hover:outline-2 md:hover:outline-primary md:active:outline-2 md:active:outline-primary"
+      >
+      </div>
+      <section class="bg-sunken py-3 pl-4 font-mono" aria-label="Terminal"><div id="terminal" class="h-full"></div></section>
+    </main>
 
-  <!-- Stacked on phones; side by side from md, with the editor's share of the width in --split. -->
-  <main class="grid h-[calc(100dvh-3rem)] grid-rows-[55%_1px_1fr] *:min-h-0 *:min-w-0 md:grid-cols-[calc(var(--split,0.55)*100%)_1px_1fr] md:grid-rows-none">
-    <section id="editor" aria-label="Editor"></section>
-    <!-- The ::before widens the 1px line into a comfortable drag target. -->
-    <div
-      id="divider"
-      role="separator"
-      aria-orientation="vertical"
-      aria-label="Resize editor and terminal"
-      tabindex="0"
-      class="relative z-10 touch-none bg-line max-md:pointer-events-none md:cursor-col-resize md:before:absolute md:before:inset-y-0 md:before:-inset-x-1 md:hover:bg-primary md:hover:outline-2 md:hover:outline-primary md:active:outline-2 md:active:outline-primary"
-    >
-    </div>
-    <section class="bg-sunken py-3 pl-4 font-mono" aria-label="Terminal"><div id="terminal" class="h-full"></div></section>
-  </main>
-</Layout>
+    <WelcomeDialog />
+  </body>
+</html>
 
 <script>
   import { examples } from '@/examples';
@@ -74,6 +92,7 @@ const button =
   const examplesPopover = document.getElementById('examples')!;
   const shareButton = document.getElementById('share')!;
   const runButton = document.getElementById('run')!;
+  const welcome = document.getElementById('welcome') as HTMLDialogElement;
 
   const editor = createEditor(
     document.getElementById('editor')!,
@@ -84,6 +103,9 @@ const button =
       if (location.hash) history.replaceState(null, '', location.pathname);
     },
   );
+
+  document.getElementById('help')!.addEventListener('click', () => welcome.showModal());
+  welcome.addEventListener('close', () => editor.focus());
 
   // xterm measures its cell size once, so the font has to be ready before it opens.
   const terminal = document.getElementById('terminal')!;
@@ -101,7 +123,7 @@ const button =
   document.addEventListener(
     'keydown',
     (event) => {
-      if (event.key !== 'Enter' || !(event.metaKey || event.ctrlKey)) return;
+      if (welcome.open || event.key !== 'Enter' || !(event.metaKey || event.ctrlKey)) return;
       event.preventDefault();
       event.stopPropagation();
       run();

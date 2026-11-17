@@ -60,7 +60,8 @@ const highlighting = HighlightStyle.define([
 ]);
 
 const theme = EditorView.theme({
-  '&': { height: '100%', fontSize: '13.5px', color: 'var(--color-fg)', backgroundColor: 'var(--color-surface)' },
+  // isolation contains CodeMirror's z-indexed layers (gutters, cursor) so overlays such as the help button sit above them.
+  '&': { height: '100%', fontSize: '13.5px', color: 'var(--color-fg)', backgroundColor: 'var(--color-surface)', isolation: 'isolate' },
   '&.cm-focused': { outline: 'none' },
   '.cm-scroller': { fontFamily: 'var(--font-mono)', fontVariantLigatures: 'none', lineHeight: '1.65' },
   '.cm-content': { padding: '12px 0' },

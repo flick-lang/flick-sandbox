@@ -63,13 +63,14 @@ const ANSI = {
   },
 };
 
+const darkMode = matchMedia('(prefers-color-scheme: dark)');
+
 /** The terminal's colours for the current theme, with the surfaces taken from global.css. */
 function terminalTheme() {
-  const root = document.documentElement;
-  const style = getComputedStyle(root);
+  const style = getComputedStyle(document.documentElement);
   const color = (name: string) => style.getPropertyValue(name).trim();
   return {
-    ...ANSI[root.dataset.theme === 'dark' ? 'dark' : 'light'],
+    ...ANSI[darkMode.matches ? 'dark' : 'light'],
     background: color('--color-sunken'),
     foreground: color('--color-fg'),
     cursor: color('--color-muted'),
@@ -93,11 +94,8 @@ export function createRunner(container: HTMLElement, onRunningChange: (running: 
   const fit = new FitAddon();
   terminal.loadAddon(fit);
   terminal.open(container);
-  fit.fit();
   new ResizeObserver(() => fit.fit()).observe(container);
-  new MutationObserver(() => (terminal.options.theme = terminalTheme())).observe(document.documentElement, {
-    attributeFilter: ['data-theme'],
-  });
+  darkMode.addEventListener('change', () => (terminal.options.theme = terminalTheme()));
 
   const encoder = new TextEncoder();
   let sandbox: Sandbox | undefined;
