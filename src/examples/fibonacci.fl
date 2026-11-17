@@ -1,6 +1,4 @@
-// Simple recursive program that prints Fibonacci numbers
-//
-// Try running it by pressing Run in the top right
+// Prints Fibonacci numbers using recursion
 
 extern fn putchar(u8 c) u8
 

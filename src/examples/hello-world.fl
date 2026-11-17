@@ -1,6 +1,4 @@
-// Basic program that prints "Hello World"
-//
-// Try running it by pressing Run in the top right
+// Prints "Hello World" one character at a time
 
 extern fn putchar(i8 c) i8
 

@@ -1,7 +1,5 @@
-// Think of a number from 1 to 100 and this program will guess it
-//
-// Press Run, then click the terminal. After each guess, type
-// h (higher), l (lower) or y (yes) and press Enter
+// Think of a number from 1 to 100 and this program will guess it.
+// Answer each guess with h (higher), l (lower) or y (yes), then Enter
 
 extern fn putchar(u8 c) u8
 extern fn getchar() i32
@@ -19,8 +17,7 @@ fn printnum(u64 n) {
     }
 }
 
-// Reads one answer, skipping the newline left over from the previous one.
-// Comparisons need both sides to share a type, so the characters are i32 like getchar's result
+// Reads one answer, skipping leftover newlines
 fn readanswer() i32 {
     i32 newline = 10
     i32 answer = getchar()
