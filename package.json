@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@astrojs/vercel": "^11.0.22",
-    "astro": "^7.4.12"
+    "astro": "^7.4.12",
+    "tailwindcss": "^4.3.5"
   }
 }
