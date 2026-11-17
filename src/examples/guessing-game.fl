@@ -1,0 +1,54 @@
+// Think of a number from 1 to 100 and this program will guess it
+//
+// Press Run, then click the terminal. After each guess, type
+// h (higher), l (lower) or y (yes) and press Enter
+
+extern fn putchar(u8 c) u8
+extern fn getchar() i32
+
+fn printnum(u64 n) {
+    u64 divisor = 1
+    while n / divisor > 9 {
+        divisor *= 10
+    }
+    while divisor > 0 {
+        u8 digit = (u8) (n / divisor % 10)
+        putchar(48 + digit)
+        divisor /= 10
+    }
+}
+
+// Reads one answer, skipping the newline left over from the previous one
+fn readanswer() i32 {
+    i32 answer = getchar()
+    while answer == 10 {
+        answer = getchar()
+    }
+    ret answer
+}
+
+pub fn main() u8 {
+    u64 low = 1
+    u64 high = 100
+    while low < high {
+        u64 guess = (low + high) / 2
+        printnum(guess)
+        putchar(63) // ?
+        putchar(32) // space
+
+        i32 answer = readanswer()
+        if answer == 104 { // h
+            low = guess + 1
+        } else if answer == 108 { // l
+            high = guess - 1
+        } else {
+            low = guess
+            high = guess
+        }
+    }
+
+    printnum(low)
+    putchar(33) // !
+    putchar(10) // newline
+    ret 0
+}

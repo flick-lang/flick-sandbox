@@ -1,0 +1,17 @@
+// Integers in Flick can be any width. A u3 holds three bits, so it
+// can only store 0 through 7, and adding 1 to 7 wraps back to 0
+
+extern fn putchar(u8 c) u8
+
+pub fn main() u8 {
+    u3 counter = 0
+    u8 printed = 0
+    while printed < 12 {
+        putchar(48 + (u8) counter)
+        putchar(32) // space
+        counter += 1
+        printed += 1
+    }
+    putchar(10) // newline
+    ret 0
+}
