@@ -1,3 +1,5 @@
+.vercel
+
 # build output
 dist/
 # generated types
@@ -14,6 +16,7 @@ pnpm-debug.log*
 
 # environment variables
 .env
+.env.local
 .env.production
 
 # macOS-specific files
