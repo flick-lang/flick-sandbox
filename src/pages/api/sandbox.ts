@@ -6,12 +6,6 @@ import { LIFETIME_MS } from '@/consts';
 export const prerender = false;
 
 /**
- * The compiler image in Vercel Container Registry. It must always be set: the SDK's default
- * image ships passwordless sudo. README.md lists what runs need from it.
- */
-const IMAGE = 'flick:v2';
-
-/**
  * A sandbox that reaches its timeout stays listed as stopped until it is deleted,
  * so each new one clears out those left behind.
  */
@@ -30,7 +24,7 @@ async function create() {
 
   // The code runs as its author's shell, so the microVM plus these limits are the security boundary.
   const sandbox = await Sandbox.create({
-    image: IMAGE,
+    image: 'flick',
     resources: { vcpus: 1 },
     timeout: LIFETIME_MS,
     networkPolicy: 'deny-all',

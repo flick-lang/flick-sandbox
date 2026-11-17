@@ -41,7 +41,7 @@ pnpm dev
 
 ### Compiler image
 
-Sandboxes start from `flick:v2` in Vercel Container Registry, set as `IMAGE` in `src/pages/api/sandbox.ts`. To ship a new compiler, push a new tag and update `IMAGE`. The image must:
+Sandboxes start from the `flick` image in Vercel Container Registry (its `latest` tag), set in `src/pages/api/sandbox.ts`. Pushing a new compiler to `latest` ships it without a deploy, so check the examples still compile first. The image must:
 
 - have `flick` on its `PATH` and a writable working directory, since runs execute `flick main.fl && ./main` there
 - exit non-zero from `flick` when a compile fails; the run script uses only shell builtins, so it can't clear out an old `main` first
