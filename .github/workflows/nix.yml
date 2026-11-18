@@ -56,7 +56,7 @@ jobs:
         if: env.PUBLISH == 'true'
         uses: vercel/vcr-action/login@v1
         with:
-          team: team_d9HXYm6iF9TfE68OHJ9i27XA
+          team: ${{ vars.VERCEL_TEAM_ID }}
 
       - name: Push to Vercel Container Registry
         if: env.PUBLISH == 'true'
