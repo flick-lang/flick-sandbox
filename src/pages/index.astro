@@ -90,6 +90,7 @@ const button =
   import { createRunner } from '@/lib/runner';
   import { shareUrl, sharedCode } from '@/lib/share';
   import { getItem, setItem } from '@/lib/storage';
+  import posthog from 'posthog-js';
 
   const main = document.querySelector('main')!;
   const divider = document.getElementById('divider')!;
@@ -98,7 +99,11 @@ const button =
   const runButton = document.getElementById('run')!;
   const welcome = document.getElementById('welcome') as HTMLDialogElement;
 
-  const initialCode = (await sharedCode()) ?? getItem(CODE_KEY) ?? examples[0].code;
+  const linkCode = await sharedCode();
+  const savedCode = getItem(CODE_KEY);
+  const initialCode = linkCode ?? savedCode ?? examples[0].code;
+  const codeSource = linkCode !== null ? 'shared' : savedCode !== null ? 'saved' : 'default';
+  posthog.capture('sandbox_loaded', { code_source: codeSource });
   const editor = createEditor(document.getElementById('editor')!, initialCode, (code) => {
     setItem(CODE_KEY, code);
     // A leftover share link would override the saved code on the next load.
@@ -115,13 +120,22 @@ const button =
     runButton.toggleAttribute('data-running', running);
     runButton.firstElementChild!.textContent = running ? 'Stop' : 'Run';
   });
-  const run = () => runner.start(editor.state.doc.toString());
+  const run = (trigger: 'button' | 'shortcut') => {
+    const code = editor.state.doc.toString();
+    posthog.capture('run_started', {
+      trigger,
+      code_lines: editor.state.doc.lines,
+      // Tells unedited examples apart from code people wrote.
+      example: examples.find((example) => example.code === code)?.name ?? null,
+    });
+    runner.start(code);
+  };
 
   const isApple = /Mac|iPhone|iPad/.test(navigator.platform);
   runButton.querySelector('kbd')!.textContent = isApple ? '⌘↵' : 'Ctrl ↵';
   runButton.addEventListener('click', () => {
     if (runButton.hasAttribute('data-running')) runner.stop();
-    else run();
+    else run('button');
   });
 
   // Captured at the document so the shortcut also works while the terminal has focus.
@@ -132,7 +146,7 @@ const button =
       if (welcome.open || !isRunShortcut) return;
       event.preventDefault();
       event.stopPropagation();
-      run();
+      run('shortcut');
     },
     { capture: true },
   );
@@ -142,6 +156,7 @@ const button =
     if (!item) return;
     const example = examples[Number(item.dataset.example)];
     setCode(editor, example.code);
+    posthog.capture('example_loaded', { example: example.name });
     examplesPopover.hidePopover();
     editor.focus();
   });
@@ -153,6 +168,7 @@ const button =
       () => true,
       () => false,
     );
+    posthog.capture('code_shared', { copied, code_lines: editor.state.doc.lines });
     shareButton.textContent = copied ? 'Link copied' : 'Link is in the address bar';
     setTimeout(() => {
       shareButton.textContent = 'Share';

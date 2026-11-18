@@ -1,6 +1,7 @@
 import { FitAddon } from '@xterm/addon-fit';
 import { Terminal } from '@xterm/xterm';
 import '@xterm/xterm/css/xterm.css';
+import posthog from 'posthog-js';
 import { LIFETIME_MS } from '@/consts';
 
 interface Sandbox {
@@ -13,7 +14,17 @@ interface Sandbox {
   expiresAt: number;
 }
 
-type Run = { socket?: WebSocket };
+type Run = {
+  socket?: WebSocket;
+  /** How long creating a sandbox took, or null when a running one was reused. */
+  sandboxStartMs: number | null;
+  /** How long compiling took, or null if it didn't finish. */
+  compileMs: number | null;
+  /** When the code had compiled and the program started, or null if it hasn't. */
+  programStartedAt: number | null;
+};
+
+type Outcome = 'exited' | 'compile_error' | 'stopped' | 'restarted' | 'connection_lost' | 'start_failed';
 
 /** A sandbox this close to expiring is replaced, not reused. */
 const EXPIRY_MARGIN_MS = 5_000;
@@ -22,13 +33,17 @@ const MAX_CODE_BYTES = 64 * 1024;
 
 const ansiDim = (text: string) => `\x1b[2m${text}\x1b[0m`;
 
+// Printed by the script before and after compiling, so their arrival in the output times the compile.
+const COMPILING_LINE = ansiDim('Compiling…');
+const RUNNING_LINE = ansiDim('Running…');
+
 // $1 is the code. The image has only a shell and flick, so the script sticks to builtins. flick exits
 // non-zero when a compile fails, so a ./main left by an earlier run is never started.
 const SCRIPT = [
   'printf %s "$1" > main.fl',
-  `printf '${ansiDim('Compiling…')}\\n'`,
+  `printf '${COMPILING_LINE}\\n'`,
   'flick main.fl',
-  `printf '${ansiDim('Running…')}\\n'`,
+  `printf '${RUNNING_LINE}\\n'`,
   './main',
 ].join(' && ');
 
@@ -110,6 +125,7 @@ export function createRunner(container: HTMLElement, onRunningChange: (running: 
   });
 
   const encoder = new TextEncoder();
+  const decoder = new TextDecoder();
   let sandbox: Sandbox | undefined;
   let currentRun: Run | undefined;
 
@@ -139,17 +155,27 @@ export function createRunner(container: HTMLElement, onRunningChange: (running: 
 
   status('Press Run to compile and run your program');
 
-  function finish(run: Run, message: string) {
+  /** Ends the run. Without a message, no status line is written. */
+  function finish(run: Run, outcome: Outcome, message?: string, details?: object) {
     if (run !== currentRun) return;
     currentRun = undefined;
     // Closing the socket kills the program.
     run.socket?.close();
-    status(message);
+    if (message) status(message);
     onRunningChange(false);
+    const { programStartedAt } = run;
+    posthog.capture('run_finished', {
+      outcome,
+      // How long the program itself ran, or null if it never started.
+      duration_ms: programStartedAt === null ? null : Math.round(performance.now() - programStartedAt),
+      sandbox_start_ms: run.sandboxStartMs,
+      compile_ms: run.compileMs,
+      ...details,
+    });
   }
 
   function stop() {
-    if (currentRun) finish(currentRun, 'Stopped');
+    if (currentRun) finish(currentRun, 'stopped', 'Stopped');
   }
 
   async function request(body: object) {
@@ -169,7 +195,7 @@ export function createRunner(container: HTMLElement, onRunningChange: (running: 
   }
 
   /** Returns a sandbox with a full lifetime ahead of it, creating one if the last has expired. */
-  async function acquire(): Promise<Sandbox> {
+  async function acquire(run: Run): Promise<Sandbox> {
     const expiresAt = Date.now() + LIFETIME_MS;
 
     const last = sandbox;
@@ -181,8 +207,10 @@ export function createRunner(container: HTMLElement, onRunningChange: (running: 
     }
 
     status('Starting sandbox…');
+    const requestedAt = performance.now();
     const response = await request({});
     const created: Omit<Sandbox, 'expiresAt'> = await response.json();
+    run.sandboxStartMs = Math.round(performance.now() - requestedAt);
     sandbox = { ...created, expiresAt };
     return sandbox;
   }
@@ -193,6 +221,10 @@ export function createRunner(container: HTMLElement, onRunningChange: (running: 
     const socket = new WebSocket(socketUrl);
     socket.binaryType = 'arraybuffer';
     run.socket = socket;
+
+    // Replaced when the Compiling line arrives, so connecting doesn't count as compiling.
+    let compileStartedAt = performance.now();
+    const compileMs = () => Math.round(performance.now() - compileStartedAt);
 
     socket.onopen = () => {
       const startMessage = JSON.stringify({
@@ -211,6 +243,15 @@ export function createRunner(container: HTMLElement, onRunningChange: (running: 
       if (isOutput) {
         const output = new Uint8Array(data);
         terminal.write(output);
+        if (run.programStartedAt === null) {
+          // Each line is written by a single printf, so it arrives within a single frame.
+          const text = decoder.decode(output);
+          if (text.includes(COMPILING_LINE)) compileStartedAt = performance.now();
+          if (text.includes(RUNNING_LINE)) {
+            run.compileMs = compileMs();
+            run.programStartedAt = performance.now();
+          }
+        }
         return;
       }
 
@@ -218,7 +259,11 @@ export function createRunner(container: HTMLElement, onRunningChange: (running: 
       if (message.type === 'exit') {
         // The code is omitted when it is 0.
         const exitCode = message.code ?? 0;
-        finish(run, `exited with code ${exitCode}`);
+        const compiled = run.programStartedAt !== null;
+        // With no program started, the exit is the compiler's.
+        if (!compiled) run.compileMs = compileMs();
+        const outcome = exitCode !== 0 && !compiled ? 'compile_error' : 'exited';
+        finish(run, outcome, `exited with code ${exitCode}`, { exit_code: exitCode });
       }
     };
 
@@ -226,34 +271,35 @@ export function createRunner(container: HTMLElement, onRunningChange: (running: 
       if (run !== currentRun) return;
       // Closing without an exit message means the sandbox itself went away.
       sandbox = undefined;
-      finish(run, `Connection lost. Runs are limited to ${LIFETIME_MS / 1000} seconds.`);
+      finish(run, 'connection_lost', `Connection lost. Runs are limited to ${LIFETIME_MS / 1000} seconds.`);
     };
   }
 
   async function start(code: string) {
     // Ends the previous run without a status line, which would land in the freshly cleared terminal.
-    currentRun?.socket?.close();
+    if (currentRun) finish(currentRun, 'restarted');
     terminal.reset();
 
     const codeBytes = encoder.encode(code).length;
     if (codeBytes > MAX_CODE_BYTES) {
       status(`The code is larger than ${MAX_CODE_BYTES / 1024} KB, the most a run accepts`);
+      posthog.capture('run_finished', { outcome: 'too_large' });
       return;
     }
 
-    const run: Run = {};
+    const run: Run = { sandboxStartMs: null, compileMs: null, programStartedAt: null };
     currentRun = run;
     onRunningChange(true);
     terminal.focus();
 
     try {
-      const runSandbox = await acquire();
+      const runSandbox = await acquire(run);
       // Stopped while the sandbox was being created. It stays available for the next run.
       if (run !== currentRun) return;
       connect(run, runSandbox, code);
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error);
-      finish(run, `Couldn't start the sandbox: ${reason}`);
+      finish(run, 'start_failed', `Couldn't start the sandbox: ${reason}`, { error: reason });
     }
   }
 
