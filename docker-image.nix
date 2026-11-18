@@ -4,7 +4,7 @@
   runCommand,
   removeReferencesTo,
   makeBinaryWrapper,
-  bashNonInteractive,
+  busybox-sandbox-shell,
   musl,
   binutils-unwrapped,
   flick,
@@ -34,7 +34,7 @@ dockerTools.buildImage {
     paths = [
       flickStaticLLVM
       cc
-      bashNonInteractive
+      busybox-sandbox-shell
     ];
     pathsToLink = [ "/bin" ];
   };
