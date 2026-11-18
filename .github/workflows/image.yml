@@ -1,4 +1,4 @@
-name: Nix build
+name: Sandbox image
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
       - '**/*.nix'
       - flake.lock
       - .node-version
-      - .github/workflows/nix.yml
+      - .github/workflows/image.yml
   pull_request:
     branches: [main]
     paths: *nix-paths
