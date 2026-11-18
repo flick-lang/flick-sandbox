@@ -31,7 +31,7 @@
     in
     {
       packages = forEachSupportedSystem (pkgs: {
-        dockerImage = pkgs.callPackage ./docker-image.nix { };
+        dockerImage = pkgs.pkgsCross.musl64.callPackage ./docker-image.nix { };
       });
 
       devShells = forEachSupportedSystem (pkgs: {
