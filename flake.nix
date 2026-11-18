@@ -23,15 +23,20 @@
           let
             pkgs = import inputs.nixpkgs {
               inherit system;
-              overlays = [ inputs.flick.overlays.default ];
+              overlays = [
+                inputs.flick.overlays.default
+                self.overlays.default
+              ];
             };
           in
           f pkgs
         );
     in
     {
+      overlays.default = import ./overlay.nix;
+
       packages = forEachSupportedSystem (pkgs: {
-        dockerImage = pkgs.callPackage ./docker-image.nix { };
+        dockerImage = pkgs.pkgsMusl.callPackage ./docker-image.nix { };
       });
 
       devShells = forEachSupportedSystem (pkgs: {
