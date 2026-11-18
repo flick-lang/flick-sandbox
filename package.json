@@ -23,7 +23,8 @@
     "@vercel/sandbox": "^4.0.0",
     "@xterm/addon-fit": "^0.11.0",
     "@xterm/xterm": "^6.0.0",
-    "astro": "^7.4.12"
+    "astro": "^7.4.12",
+    "posthog-js": "^1.450.0"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.12",

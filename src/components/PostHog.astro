@@ -1,0 +1,18 @@
+<script>
+  import posthog from "posthog-js"
+
+  posthog.init("phc_yBzYk5JyLg4EbJsifWPp7YrL7rE44hCmBLwLPTLV4pzp", {
+    api_host: "https://p.flick-lang.com",
+    defaults: "2026-08-30",
+    capture_pageview: "history_change",
+    logs: {
+      serviceName: "flick-sandbox-web",
+      environment: import.meta.env.DEV ? "development" : "production",
+    },
+    capture_exceptions: {
+      capture_unhandled_errors: true,
+      capture_unhandled_rejections: true,
+      capture_console_errors: false,
+    },
+  });
+</script>

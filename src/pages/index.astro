@@ -1,6 +1,7 @@
 ---
 import { Font } from 'astro:assets';
 import WelcomeDialog from '@/components/WelcomeDialog.astro';
+import PostHog from '@/components/PostHog.astro';
 import { examples } from '@/examples';
 import '@/styles/global.css';
 
@@ -17,6 +18,7 @@ const button =
     <title>Flick Sandbox</title>
     <Font cssVariable="--font-inter" preload />
     <Font cssVariable="--font-jetbrains-mono" />
+    <PostHog />
   </head>
   <!-- text-sm is on body because on html it would shrink the rem, and with it every other size. -->
   <body class="flex h-dvh flex-col text-sm">
