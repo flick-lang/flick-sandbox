@@ -33,10 +33,10 @@
         );
     in
     {
-      overlays.default = import ./overlay.nix;
+      overlays.default = import ./nix/overlay.nix;
 
       packages = forEachSupportedSystem (pkgs: {
-        dockerImage = pkgs.pkgsCross.musl64.callPackage ./docker-image.nix { };
+        dockerImage = pkgs.pkgsCross.musl64.callPackage ./nix/docker-image.nix { };
       });
 
       devShells = forEachSupportedSystem (pkgs: {
