@@ -8,16 +8,16 @@ The site is an [Astro](https://astro.build) app, styled with [Tailwind CSS](http
 
 1. On the first Run, the browser asks `/api/sandbox` for a sandbox. The endpoint creates a [Vercel Sandbox](https://vercel.com/docs/vercel-sandbox) from the compiler image and returns its terminal URL and token, plus a key that only this browser knows.
 2. The browser connects its terminal ([xterm.js](https://xtermjs.org)) straight to the sandbox over a WebSocket, writes the code to `main.fl` and runs `./flick main.fl && ./main`.
-3. Later runs reuse the sandbox, so they start immediately. Each one sends the sandbox's name and key back to `/api/sandbox`, which pushes its expiry out to 60 seconds from that run.
+3. Later runs reuse the sandbox, so they start immediately. Each one sends the sandbox's name and key back to `/api/sandbox`, which pushes its expiry out to 2 minutes from that run.
 
-Nothing stops a sandbox explicitly: it expires 60 seconds after its last run. An expired sandbox stays listed as stopped, so `/api/sandbox` deletes any it finds whenever it creates a new one.
+Nothing stops a sandbox explicitly: it expires 2 minutes after its last run. An expired sandbox stays listed as stopped until Vercel removes it after 14 days of inactivity; it costs nothing in the meantime.
 
 ## Sandbox limits
 
 Flick's `extern fn` can call any libc function, so running a program is the same as giving its author a shell. Each run is contained by:
 
 - **Isolation**: a separate microVM per browser tab, deleted after it expires
-- **Time**: 60 seconds per run, including time spent waiting for input
+- **Time**: 2 minutes per run, including time spent waiting for input
 - **Network**: none
 - **Resources**: 1 vCPU and 2 GB of memory
 - **Code size**: 64 KB

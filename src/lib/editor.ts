@@ -14,7 +14,7 @@ import { tags } from '@lezer/highlight';
 const KEYWORDS = new Set(['pub', 'fn', 'extern', 'if', 'while', 'else', 'ret', 'true', 'false']);
 const TYPES = new Set(['void', 'bool']);
 
-const flick = StreamLanguage.define<{ depth: number }>({
+const flickLanguage = StreamLanguage.define<{ depth: number }>({
   name: 'flick',
   startState: () => ({ depth: 0 }),
   token(stream, state) {
@@ -27,7 +27,8 @@ const flick = StreamLanguage.define<{ depth: number }>({
     if (stream.match(/^[iu][1-9]\d*\b/)) return 'typeName';
     if (stream.match(/^[A-Za-z_$][\w$]*/)) {
       const word = stream.current();
-      return KEYWORDS.has(word) ? 'keyword' : TYPES.has(word) ? 'typeName' : 'variableName';
+      if (KEYWORDS.has(word)) return 'keyword';
+      return TYPES.has(word) ? 'typeName' : 'variableName';
     }
     if (stream.match(/^\d+/)) return 'number';
     if (stream.match(/^"(?:[^"\\]|\\.)*"?/)) return 'string';
@@ -55,13 +56,18 @@ const highlighting = HighlightStyle.define([
   { tag: tags.typeName, color: 'var(--syntax-type)' },
   { tag: tags.number, color: 'var(--syntax-number)' },
   { tag: tags.string, color: 'var(--syntax-string)' },
-  { tag: tags.operator, color: 'var(--syntax-operator)' },
+  { tag: tags.operator, color: 'var(--color-muted)' },
   { tag: tags.comment, color: 'var(--syntax-comment)', fontStyle: 'italic' },
 ]);
 
 const theme = EditorView.theme({
-  // isolation contains CodeMirror's z-indexed layers (gutters, cursor) so overlays such as the help button sit above them.
-  '&': { height: '100%', fontSize: '13.5px', color: 'var(--color-fg)', backgroundColor: 'var(--color-surface)', isolation: 'isolate' },
+  '&': {
+    height: '100%',
+    fontSize: '13.5px',
+    color: 'var(--color-fg)',
+    backgroundColor: 'var(--color-surface)',
+    isolation: 'isolate',
+  },
   '&.cm-focused': { outline: 'none' },
   '.cm-scroller': { fontFamily: 'var(--font-mono)', fontVariantLigatures: 'none', lineHeight: '1.65' },
   '.cm-content': { padding: '12px 0' },
@@ -69,6 +75,7 @@ const theme = EditorView.theme({
   '.cm-lineNumbers .cm-gutterElement': { padding: '0 12px 0 16px' },
   '.cm-activeLine, .cm-activeLineGutter': { backgroundColor: 'var(--active-line)' },
   '.cm-activeLineGutter': { color: 'var(--color-muted)' },
+  // The long selector matches the specificity of CodeMirror's own focused-selection style, so it wins.
   '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground': {
     backgroundColor: 'var(--selection)',
   },
@@ -86,14 +93,16 @@ export function createEditor(parent: HTMLElement, doc: string, onChange: (code: 
       highlightActiveLineGutter(),
       drawSelection(),
       history(),
-      flick,
+      flickLanguage,
       syntaxHighlighting(highlighting),
       indentUnit.of('    '),
       indentOnInput(),
       bracketMatching(),
       closeBrackets(),
       keymap.of([...closeBracketsKeymap, ...defaultKeymap, ...historyKeymap, indentWithTab]),
-      EditorView.updateListener.of((update) => update.docChanged && onChange(update.state.doc.toString())),
+      EditorView.updateListener.of((update) => {
+        if (update.docChanged) onChange(update.state.doc.toString());
+      }),
       EditorView.contentAttributes.of({ 'aria-label': 'Flick code' }),
       theme,
     ],

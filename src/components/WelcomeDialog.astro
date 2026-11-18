@@ -1,14 +1,12 @@
-<!-- The padding lives on the inner div so a click on the dialog element itself is a click on the backdrop. -->
 <dialog
   id="welcome"
   aria-labelledby="welcome-title"
-  class="m-auto w-[min(28rem,calc(100vw-2rem))] rounded-xl border border-line bg-raised text-fg shadow-2xl backdrop:bg-black/40"
+  class="m-auto w-md rounded-xl border border-line bg-raised text-fg backdrop:bg-black/40"
 >
   <div class="p-6">
     <h2 id="welcome-title" class="text-lg font-semibold tracking-tight">Welcome to the Flick Sandbox</h2>
     <p class="mt-2 text-muted">
-      Flick is a small compiled language we built to explore compiler design. Use this sandbox to write and run Flick
-      programs!
+      Flick is a small compiled language we built to explore compiler design. Use this sandbox to write and run Flick programs!
     </p>
     <ul class="mt-4 list-disc space-y-1.5 pl-5 text-muted marker:text-faint">
       <li><strong class="font-medium text-fg">Run</strong> compiles and runs your code.</li>
@@ -23,16 +21,15 @@
 
 <script>
   import { WELCOME_KEY } from '@/consts';
+  import { getItem, setItem } from '@/lib/storage';
 
   const welcome = document.getElementById('welcome') as HTMLDialogElement;
+  // Close the dialog when the area outside the dialog is clicked
   welcome.addEventListener('click', (event) => event.target === welcome && welcome.close());
 
-  // Shown once, but never over a shared link, which someone opened to see that code. When storage
-  // is blocked the welcome is skipped rather than shown on every visit.
-  try {
-    if (!location.hash && !localStorage.getItem(WELCOME_KEY)) {
-      welcome.showModal();
-      localStorage.setItem(WELCOME_KEY, '1');
-    }
-  } catch {}
+  // Shown on the first visit only
+  if (getItem(WELCOME_KEY) === null) {
+    welcome.showModal();
+    setItem(WELCOME_KEY, '1');
+  }
 </script>

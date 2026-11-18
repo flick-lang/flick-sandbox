@@ -13,16 +13,24 @@ interface Sandbox {
   expiresAt: number;
 }
 
+type Run = { socket?: WebSocket };
+
 /** A sandbox this close to expiring is replaced, not reused. */
 const EXPIRY_MARGIN_MS = 5_000;
-/** Keeps the code, passed as one argument, under Linux's 128 KB limit for a single argument. */
+/** Linux caps a single argument at 128 KB, and the code is passed as one. */
 const MAX_CODE_BYTES = 64 * 1024;
 
-const dim = (text: string) => `\x1b[2m${text}\x1b[0m`;
+const ansiDim = (text: string) => `\x1b[2m${text}\x1b[0m`;
 
 // $1 is the code. The image has only a shell and flick, so the script sticks to builtins. flick exits
 // non-zero when a compile fails, so a ./main left by an earlier run is never started.
-const SCRIPT = `printf %s "$1" > main.fl && printf '${dim('Compiling…')}\\n' && flick main.fl && printf '${dim('Running…')}\\n' && ./main`;
+const SCRIPT = [
+  'printf %s "$1" > main.fl',
+  `printf '${ansiDim('Compiling…')}\\n'`,
+  'flick main.fl',
+  `printf '${ansiDim('Running…')}\\n'`,
+  './main',
+].join(' && ');
 
 // ANSI colours tuned for each background; xterm's defaults assume a dark one.
 const ANSI = {
@@ -70,8 +78,9 @@ const darkMode = matchMedia('(prefers-color-scheme: dark)');
 function terminalTheme() {
   const style = getComputedStyle(document.documentElement);
   const color = (name: string) => style.getPropertyValue(name).trim();
+  const ansiColors = darkMode.matches ? ANSI.dark : ANSI.light;
   return {
-    ...ANSI[darkMode.matches ? 'dark' : 'light'],
+    ...ansiColors,
     background: color('--color-sunken'),
     foreground: color('--color-fg'),
     cursor: color('--color-muted'),
@@ -82,7 +91,7 @@ function terminalTheme() {
 
 /**
  * Runs code in a sandbox and connects the terminal straight to its PTY. The sandbox is
- * reused by later runs and expires a minute after the last one. At most one run is
+ * reused by later runs and expires LIFETIME_MS after the last one. At most one run is
  * active: starting a new one stops the previous.
  */
 export function createRunner(container: HTMLElement, onRunningChange: (running: boolean) => void) {
@@ -96,98 +105,155 @@ export function createRunner(container: HTMLElement, onRunningChange: (running: 
   terminal.loadAddon(fit);
   terminal.open(container);
   new ResizeObserver(() => fit.fit()).observe(container);
-  darkMode.addEventListener('change', () => (terminal.options.theme = terminalTheme()));
+  darkMode.addEventListener('change', () => {
+    terminal.options.theme = terminalTheme();
+  });
 
   const encoder = new TextEncoder();
   let sandbox: Sandbox | undefined;
-  let active: { socket?: WebSocket } | undefined;
+  let currentRun: Run | undefined;
 
-  const send = (data: string | Uint8Array<ArrayBuffer>) => {
-    if (active?.socket?.readyState === WebSocket.OPEN) active.socket.send(data);
-  };
+  // Binary frames carry terminal input and output; text frames carry JSON control messages.
+  function send(data: string | Uint8Array<ArrayBuffer>) {
+    const socket = currentRun?.socket;
+    if (socket?.readyState === WebSocket.OPEN) socket.send(data);
+  }
+
   terminal.onData((data) => send(encoder.encode(data)));
-  terminal.onResize(({ cols, rows }) => send(JSON.stringify({ type: 'resize', cols, rows })));
+  terminal.onResize(({ cols, rows }) => {
+    const resizeMessage = JSON.stringify({ type: 'resize', cols, rows });
+    send(resizeMessage);
+  });
 
-  /** Writes a dim line, starting a new line first if the program left the cursor mid-line. */
-  const status = (text: string) =>
-    terminal.write('', () => terminal.writeln((terminal.buffer.active.cursorX ? '\r\n' : '') + dim(text)));
+  /**
+   * Writes a dim line, starting a new line first if the program left the cursor mid-line.
+   * The empty write waits for pending output, so the cursor position is up to date.
+   */
+  function status(text: string) {
+    terminal.write('', () => {
+      const isMidLine = terminal.buffer.active.cursorX > 0;
+      const prefix = isMidLine ? '\r\n' : '';
+      terminal.writeln(prefix + ansiDim(text));
+    });
+  }
 
   status('Press Run to compile and run your program');
 
-  const finish = (run: typeof active, message: string) => {
-    if (run !== active) return;
-    active = undefined;
+  function finish(run: Run, message: string) {
+    if (run !== currentRun) return;
+    currentRun = undefined;
     // Closing the socket kills the program.
-    run?.socket?.close();
+    run.socket?.close();
     status(message);
     onRunningChange(false);
-  };
+  }
 
-  const stop = () => active && finish(active, 'Stopped');
+  function stop() {
+    if (currentRun) finish(currentRun, 'Stopped');
+  }
 
   async function request(body: object) {
-    const response = await fetch('/api/sandbox', { method: 'POST', body: JSON.stringify(body) });
+    const init = { method: 'POST', body: JSON.stringify(body) };
+    const response = await fetch('/api/sandbox', init);
     if (response.status === 429) throw new Error('too many runs, try again in a minute');
     if (!response.ok) throw new Error(await response.text());
     return response;
   }
 
+  /** Pushes the sandbox's timeout out to a full lifetime. If that fails, the sandbox has stopped. */
+  function extend({ name, key }: Sandbox) {
+    request({ name, key }).catch(() => {
+      // Only forget it if a newer sandbox hasn't replaced it in the meantime.
+      if (sandbox?.name === name) sandbox = undefined;
+    });
+  }
+
   /** Returns a sandbox with a full lifetime ahead of it, creating one if the last has expired. */
   async function acquire(): Promise<Sandbox> {
     const expiresAt = Date.now() + LIFETIME_MS;
-    if (sandbox && Date.now() < sandbox.expiresAt - EXPIRY_MARGIN_MS) {
-      const { name, key } = sandbox;
+
+    const last = sandbox;
+    if (last && Date.now() < last.expiresAt - EXPIRY_MARGIN_MS) {
       // Not awaited: the sandbox is already running, so the program starts while its timeout is extended.
-      request({ name, key }).catch(() => sandbox?.name === name && (sandbox = undefined));
-      return (sandbox = { ...sandbox, expiresAt });
+      extend(last);
+      sandbox = { ...last, expiresAt };
+      return sandbox;
     }
+
     status('Starting sandbox…');
-    sandbox = undefined;
-    return (sandbox = { ...(await (await request({})).json()), expiresAt });
+    const response = await request({});
+    const created: Omit<Sandbox, 'expiresAt'> = await response.json();
+    sandbox = { ...created, expiresAt };
+    return sandbox;
+  }
+
+  /** Opens the sandbox's terminal socket and runs the code there. */
+  function connect(run: Run, { url, token }: Sandbox, code: string) {
+    const socketUrl = `${url}?token=${encodeURIComponent(token)}`;
+    const socket = new WebSocket(socketUrl);
+    socket.binaryType = 'arraybuffer';
+    run.socket = socket;
+
+    socket.onopen = () => {
+      const startMessage = JSON.stringify({
+        type: 'start',
+        command: 'sh',
+        args: ['-c', SCRIPT, 'sh', code],
+        env: ['TERM=xterm-256color'],
+        cols: terminal.cols,
+        rows: terminal.rows,
+      });
+      socket.send(startMessage);
+    };
+
+    socket.onmessage = ({ data }) => {
+      const isOutput = typeof data !== 'string';
+      if (isOutput) {
+        const output = new Uint8Array(data);
+        terminal.write(output);
+        return;
+      }
+
+      const message = JSON.parse(data);
+      if (message.type === 'exit') {
+        // The code is omitted when it is 0.
+        const exitCode = message.code ?? 0;
+        finish(run, `exited with code ${exitCode}`);
+      }
+    };
+
+    socket.onclose = () => {
+      if (run !== currentRun) return;
+      // Closing without an exit message means the sandbox itself went away.
+      sandbox = undefined;
+      finish(run, `Connection lost. Runs are limited to ${LIFETIME_MS / 1000} seconds.`);
+    };
   }
 
   async function start(code: string) {
     // Ends the previous run without a status line, which would land in the freshly cleared terminal.
-    active?.socket?.close();
+    currentRun?.socket?.close();
     terminal.reset();
-    if (encoder.encode(code).length > MAX_CODE_BYTES) return status('The code is larger than 64 KB, the most a run accepts');
 
-    const run: NonNullable<typeof active> = (active = {});
+    const codeBytes = encoder.encode(code).length;
+    if (codeBytes > MAX_CODE_BYTES) {
+      status(`The code is larger than ${MAX_CODE_BYTES / 1024} KB, the most a run accepts`);
+      return;
+    }
+
+    const run: Run = {};
+    currentRun = run;
     onRunningChange(true);
     terminal.focus();
 
     try {
-      const { url, token } = await acquire();
+      const runSandbox = await acquire();
       // Stopped while the sandbox was being created. It stays available for the next run.
-      if (run !== active) return;
-
-      const socket = (run.socket = new WebSocket(`${url}?token=${encodeURIComponent(token)}`));
-      socket.binaryType = 'arraybuffer';
-      socket.onopen = () =>
-        socket.send(
-          JSON.stringify({
-            type: 'start',
-            command: 'sh',
-            args: ['-c', SCRIPT, 'sh', code],
-            env: ['TERM=xterm-256color'],
-            cols: terminal.cols,
-            rows: terminal.rows,
-          }),
-        );
-      socket.onmessage = ({ data }) => {
-        if (typeof data !== 'string') return terminal.write(new Uint8Array(data));
-        const message = JSON.parse(data);
-        // The code is omitted when it is 0.
-        if (message.type === 'exit') finish(run, `exited with code ${message.code ?? 0}`);
-      };
-      socket.onclose = () => {
-        if (run !== active) return;
-        // Closing without an exit message means the sandbox itself went away.
-        sandbox = undefined;
-        finish(run, `Connection lost. Runs are limited to ${LIFETIME_MS / 1000} seconds.`);
-      };
+      if (run !== currentRun) return;
+      connect(run, runSandbox, code);
     } catch (error) {
-      finish(run, `Couldn't start the sandbox: ${error instanceof Error ? error.message : error}`);
+      const reason = error instanceof Error ? error.message : String(error);
+      finish(run, `Couldn't start the sandbox: ${reason}`);
     }
   }
 

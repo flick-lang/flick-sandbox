@@ -1,9 +1,6 @@
 @import "tailwindcss";
 
-/*
- * Colours are semantic and flip with the theme, so markup rarely needs dark: variants.
- * They are hex because the terminal reads them and xterm only parses hex and rgb().
- */
+/* Semantic colours that flip with the system theme. Hex, because xterm reads some and only parses hex and rgb(). */
 @theme {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
@@ -23,7 +20,6 @@
 }
 
 @layer base {
-  /* The theme follows the system; Tailwind's dark: variant uses the same media query. */
   :root {
     color-scheme: light dark;
 
@@ -34,11 +30,9 @@
     --syntax-type: #0f766e;
     --syntax-number: #b45309;
     --syntax-string: #15803d;
-    --syntax-operator: var(--color-muted);
     --syntax-comment: #64748b;
   }
 
-  /* Neutral greys: the blue is kept for the accent only. */
   @media (prefers-color-scheme: dark) {
     :root {
       --color-accent: #60a5fa;
@@ -60,7 +54,6 @@
       --syntax-type: #5ccfc0;
       --syntax-number: #f0b563;
       --syntax-string: #8fd19e;
-      --syntax-operator: var(--color-muted);
       --syntax-comment: #808080;
     }
   }

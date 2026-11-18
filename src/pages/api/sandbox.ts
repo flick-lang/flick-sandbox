@@ -5,20 +5,7 @@ import { LIFETIME_MS } from '@/consts';
 
 export const prerender = false;
 
-/**
- * A sandbox that reaches its timeout stays listed as stopped until it is deleted,
- * so each new one clears out those left behind.
- */
-async function deleteStoppedSandboxes() {
-  const { sandboxes } = await Sandbox.list();
-  const stopped = sandboxes.filter((sandbox) => sandbox.status === 'stopped');
-  await Promise.all(stopped.map(async ({ name }) => (await Sandbox.get({ name })).delete()));
-}
-
 async function create() {
-  // Concurrent requests can race to delete the same sandbox; losing that race is harmless.
-  const cleanup = deleteStoppedSandboxes().catch(console.error);
-
   // Only the browser that created a sandbox learns its key, so nobody else can keep it alive.
   const key = randomBytes(16).toString('hex');
 
@@ -28,28 +15,33 @@ async function create() {
     resources: { vcpus: 1 },
     timeout: LIFETIME_MS,
     networkPolicy: 'deny-all',
-    // A persistent sandbox would leave a snapshot behind on every stop.
     persistent: false,
     tags: { key },
   });
   const { url, token } = await sandbox.openInteractive();
-
-  await cleanup;
   return Response.json({ name: sandbox.name, key, url, token });
+}
+
+/** Compares in constant time, so response timing doesn't reveal how much of a guessed key was right. */
+function keysMatch(given: string, expected: string) {
+  return given.length === expected.length && timingSafeEqual(Buffer.from(given), Buffer.from(expected));
 }
 
 /** Pushes the sandbox's expiry out to a full lifetime from now. */
 async function extend(name: string, key: string) {
   const sandbox = await Sandbox.get({ name }).catch(() => undefined);
   const expected = sandbox?.tags?.key;
-  if (!expected || key.length !== expected.length || !timingSafeEqual(Buffer.from(key), Buffer.from(expected))) {
+  if (!expected || !keysMatch(key, expected)) {
     return new Response('Unknown sandbox', { status: 404 });
   }
-  // extendTimeout would resume a stopped sandbox, so only a running one may be extended.
-  if (sandbox.status !== 'running' || !sandbox.expiresAt) return new Response('Sandbox has stopped', { status: 410 });
+  // A stopped sandbox can't be resumed because it isn't persistent, so the client creates a new one.
+  if (sandbox.status !== 'running' || !sandbox.expiresAt) {
+    return new Response('Sandbox has stopped', { status: 410 });
+  }
 
   // The API rejects extensions shorter than a second, which quick reruns would otherwise request.
-  const shortfall = LIFETIME_MS - (sandbox.expiresAt.getTime() - Date.now());
+  const remaining = sandbox.expiresAt.getTime() - Date.now();
+  const shortfall = LIFETIME_MS - remaining;
   if (shortfall >= 1000) await sandbox.extendTimeout(shortfall);
   return new Response(null, { status: 204 });
 }
@@ -58,6 +50,8 @@ async function extend(name: string, key: string) {
 export const POST: APIRoute = async ({ request }) => {
   const { name, key } = await request.json();
   if (name === undefined) return create();
-  if (typeof name !== 'string' || typeof key !== 'string') return new Response('Invalid sandbox', { status: 400 });
+  if (typeof name !== 'string' || typeof key !== 'string') {
+    return new Response('Invalid sandbox', { status: 400 });
+  }
   return extend(name, key);
 };
