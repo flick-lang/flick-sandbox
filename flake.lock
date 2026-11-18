@@ -7,11 +7,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1794970475,
-        "narHash": "sha256-IiOJxWlQswcmv73SlQnNEyxIkN6EMF59EN2tB8s9XUI=",
+        "lastModified": 1794975691,
+        "narHash": "sha256-E3gmxMOgGDtg7wwQ85SR+GK2M+OGSjeQlm+rlQOjQaY=",
         "owner": "flick-lang",
         "repo": "flick",
-        "rev": "13c9c1f56f3774791b06c631954aa6c6d4e3f6fe",
+        "rev": "d04635eeae1abab90535ee3f4812d74624931dc8",
         "type": "github"
       },
       "original": {
