@@ -1,45 +1,60 @@
 # Flick Sandbox
 
-This sandbox is a website that allows users to try out the Flick programming language without having 
-to install the compiler themselves. The webiste consists of a code editor where users can type their
-Flick program and a console where users can see their program's output.
+A web playground for the [Flick](https://github.com/flick-lang/flick) programming language. Edit code, press Run, and the compiler and your program run in a real terminal that also takes keyboard input.
 
-> [!NOTE]
-> The sandbox is currently under development.
+## How it works
 
-## Sandbox Limits
+The site is an [Astro](https://astro.build) app, styled with [Tailwind CSS](https://tailwindcss.com) and deployed on Vercel. The pages are static; one server endpoint, `/api/sandbox`, manages sandboxes:
 
-The website runs users' Flick programs subject to the following constraints:
+1. On the first Run, the browser asks `/api/sandbox` for a sandbox. The endpoint creates a [Vercel Sandbox](https://vercel.com/docs/vercel-sandbox) from the compiler image and returns its terminal URL and token, plus a key that only this browser knows.
+2. The browser connects its terminal ([xterm.js](https://xtermjs.org)) straight to the sandbox over a WebSocket, writes the code to `main.fl` and runs `./flick main.fl && ./main`.
+3. Later runs reuse the sandbox, so they start immediately. Each one sends the sandbox's name and key back to `/api/sandbox`, which pushes its expiry out to 2 minutes from that run.
 
-- **Time**: Programs timeout after 5 seconds
-- **Network**: Programs will not have any internet access
-- **Disk**: Programs do not have read or write access to the disk
-- **Memory**: TBD
-- **CPU**: TBD
+Nothing stops a sandbox explicitly: it expires 2 minutes after its last run. An expired sandbox stays listed as stopped until Vercel removes it after 14 days of inactivity; it costs nothing in the meantime.
 
-## Implementation details
+## Sandbox limits
 
-The server is hosted on an AWS EC2 instance and is primarily based on Fast API. See below for more details
-about how the [backend][a] and [frontend][b] are implemented.
+Flick's `extern fn` can call any libc function, so running a program is the same as giving its author a shell. Each run is contained by:
 
-[a]: #more-on-the-sandbox-backend
-[b]: #more-on-the-sandbox-frontend
+- **Isolation**: a separate microVM per browser tab, deleted after it expires
+- **Time**: 2 minutes per run, including time spent waiting for input
+- **Network**: none
+- **Resources**: 1 vCPU and 2 GB of memory
+- **Code size**: 64 KB
 
-### More on the sandbox backend
+The terminal token handed to the browser only works for that one sandbox and dies with it. Runs in the same tab share a sandbox, so files one run writes are visible to the next.
 
-When the frontend requests to compile/run a program, the server passes the user's Flick source code 
-to the backend. The backend consists of a Docker container (for compilation and running) and a program that 
-passes data between the container and the frontend.
+## Development
 
-The Docker container is used to isolate all Flick programs that are run, by ensuring that only the 
-Docker container compiles and runs user-written Flick programs. The container ensures that user-written 
-Flick programs can't access the network. Also, the compiled programs is executed without read/write 
-access to ensure that user-written Flick programs can't access the filesystem.
+Node and pnpm come from `flake.nix` (`nix develop`, or direnv).
 
-The Flick progam is deleted after being run, and is run using bash's "timeout" command so that it times out
-after 5 seconds.
+```sh
+pnpm install
+pnpm dlx vercel link      # once, to connect the directory to the Vercel project
+pnpm dlx vercel env pull  # writes VERCEL_OIDC_TOKEN to .env.local; expires after a few hours
+pnpm dev
+```
 
-### More on the sandbox frontend
+`pnpm check` type-checks the project and `pnpm build` builds it.
 
-The frontend is writen in Next.js using `shadcn/ui`, and it uses WebSockets for continuous communication with the backend
-when programs are running.
+## Deployment
+
+### Compiler image
+
+Sandboxes start from the `flick` image in Vercel Container Registry (its `latest` tag), set in `src/pages/api/sandbox.ts`. Pushing a new compiler to `latest` ships it without a deploy, so check the examples still compile first. The image must:
+
+- have `flick` on its `PATH` and a writable working directory, since runs execute `flick main.fl && ./main` there
+- exit non-zero from `flick` when a compile fails; the run script uses only shell builtins, so it can't clear out an old `main` first
+- not install `sudo`
+- need no network access
+
+### Rate limiting
+
+`/api/sandbox` has no authentication, so it relies on the one WAF rate-limit rule the Hobby plan allows. Configure it in the Vercel dashboard under Firewall:
+
+- **If**: request path equals `/api/sandbox`
+- **Then**: rate limit by IP address, 10 requests per 60 seconds, responding with 429
+
+### Quotas
+
+The Hobby plan pauses sandboxes when a quota runs out; it doesn't bill. The relevant limits are 10 concurrent sandboxes, 5 hours of active CPU, 420 GB-hours of memory and 5,000 sandbox creations per month. Memory is billed per wall-clock minute with a one-minute minimum.

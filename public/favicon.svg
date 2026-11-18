@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" stroke-width="4.500" stroke-linecap="round" stroke-linejoin="round">
+  <!-- A lowercase f with a blue crossbar. The colours follow the browser's theme (not the site's) to stay visible on any tab strip. -->
+  <style>
+    .stem { stroke: #171717 }
+    .bar { stroke: #2563eb }
+    @media (prefers-color-scheme: dark) {
+      .stem { stroke: #f5f5f5 }
+      .bar { stroke: #60a5fa }
+    }
+  </style>
+  <path class="stem" d="M23 7h-2.500c-3.500 0-5.500 2-5.500 5.500V26" />
+  <path class="bar" d="M10 16h11" />
+</svg>

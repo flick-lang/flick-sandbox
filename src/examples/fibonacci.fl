@@ -1,0 +1,35 @@
+// Prints Fibonacci numbers using recursion
+
+extern fn putchar(u8 c) u8
+
+fn fib(u64 n) u64 {
+    if n == 0 {
+        ret 0
+    } else if n == 1 {
+        ret 1
+    }
+
+    ret fib(n-1) + fib(n-2)
+}
+
+fn printnum(u64 n) {
+    u64 divisor = 1
+    while n / divisor > 9 {
+        divisor *= 10
+    }
+    while divisor > 0 {
+        u8 digit = (u8) (n / divisor % 10)
+        putchar(48 + digit)
+        divisor /= 10
+    }
+}
+
+pub fn main() u8 {
+    u64 n = 0
+    while n < 8 {
+        printnum(fib(n))
+        putchar(32) // space
+        n += 1
+    }
+    ret 0
+}

@@ -1,0 +1,82 @@
+name: Nix build
+
+on:
+  push:
+    branches: [main]
+    paths: &nix-paths
+      - '**/*.nix'
+      - flake.lock
+      - .node-version
+      - .github/workflows/nix.yml
+  pull_request:
+    branches: [main]
+    paths: *nix-paths
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    env:
+      # A unique tag per build; it is promoted to :latest only once optimized, since sandboxes use :latest
+      IMAGE: vcr.vercel.com/max-larssons-projects/flick-sandbox/flick:${{ github.sha }}
+      PUBLISH: ${{ github.ref == 'refs/heads/main' }}
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Determinate Nix
+        uses: DeterminateSystems/determinate-nix-action@v3
+
+      - name: Set up Magic Nix Cache
+        uses: DeterminateSystems/magic-nix-cache-action@v15
+        with:
+          use-gha-cache: true
+          use-flakehub: false
+
+      - name: Check flake.lock health
+        uses: DeterminateSystems/flake-checker-action@v14
+
+      - name: Build Docker image
+        run: nix build .#dockerImage
+
+      - name: Upload Docker image
+        if: env.PUBLISH == 'false'
+        uses: actions/upload-artifact@v7
+        with:
+          name: flick-image
+          path: result
+          compression-level: 0
+          retention-days: 7
+
+      - name: Log in to Vercel Container Registry
+        if: env.PUBLISH == 'true'
+        uses: vercel/vcr-action/login@v1
+        with:
+          team: ${{ vars.VERCEL_TEAM_ID }}
+
+      - name: Push to Vercel Container Registry
+        if: env.PUBLISH == 'true'
+        run: |
+          docker load < result
+          docker tag flick:latest "$IMAGE"
+          docker push "$IMAGE"
+
+      - name: Wait for optimization
+        if: env.PUBLISH == 'true'
+        id: optimized
+        uses: vercel/vcr-action/wait-for-optimized-image@v1
+        with:
+          image: ${{ env.IMAGE }}
+          timeout-seconds: 600
+
+      - name: Promote the optimized image to latest
+        if: env.PUBLISH == 'true'
+        run: |
+          LATEST_IMAGE="${IMAGE%:*}:latest"
+          docker tag "$IMAGE" "$LATEST_IMAGE"
+          docker push "$LATEST_IMAGE"
+

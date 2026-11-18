@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+/* Semantic colours that flip with the system theme. Hex, because xterm reads some and only parses hex and rgb(). */
+@theme {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+
+  --color-primary: #2563eb;
+  --color-accent: #2563eb;
+
+  --color-surface: #ffffff;
+  --color-sunken: #f8fafc;
+  --color-raised: #ffffff;
+  --color-hover: #f1f5f9;
+  --color-line: #e2e8f0;
+
+  --color-fg: #0f172a;
+  --color-muted: #475569;
+  --color-faint: #94a3b8;
+}
+
+@layer base {
+  :root {
+    color-scheme: light dark;
+
+    --selection: #dbeafe;
+    --active-line: #f8fafc;
+
+    --syntax-keyword: #1d4ed8;
+    --syntax-type: #0f766e;
+    --syntax-number: #b45309;
+    --syntax-string: #15803d;
+    --syntax-comment: #64748b;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-accent: #60a5fa;
+
+      --color-surface: #171717;
+      --color-sunken: #101010;
+      --color-raised: #232323;
+      --color-hover: #ffffff14;
+      --color-line: #2a2a2a;
+
+      --color-fg: #e5e5e5;
+      --color-muted: #a3a3a3;
+      --color-faint: #5c5c5c;
+
+      --selection: #3b82f64d;
+      --active-line: #ffffff0a;
+
+      --syntax-keyword: #7aa7ff;
+      --syntax-type: #5ccfc0;
+      --syntax-number: #f0b563;
+      --syntax-string: #8fd19e;
+      --syntax-comment: #808080;
+    }
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+}

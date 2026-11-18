@@ -1,0 +1,2 @@
+- [ ] Use musl for the Docker image.
+- [ ] Include only sh in the Docker image, not bashNoninteractive.

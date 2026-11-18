@@ -1,0 +1,175 @@
+---
+import { Font } from 'astro:assets';
+import WelcomeDialog from '@/components/WelcomeDialog.astro';
+import { examples } from '@/examples';
+import '@/styles/global.css';
+
+const button =
+  'inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg px-2.5 font-medium whitespace-nowrap hover:bg-hover hover:text-fg';
+---
+
+<html lang="en" class="bg-surface font-sans text-fg antialiased">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Write and run Flick programs in your browser." />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Flick Sandbox</title>
+    <Font cssVariable="--font-inter" preload />
+    <Font cssVariable="--font-jetbrains-mono" />
+  </head>
+  <!-- text-sm is on body because on html it would shrink the rem, and with it every other size. -->
+  <body class="flex h-dvh flex-col text-sm">
+    <header class="flex h-12 items-center gap-2 border-b border-line px-3">
+      <h1 class="mr-2 text-base font-semibold tracking-tight">Flick <span class="font-normal text-muted">Sandbox</span></h1>
+      <button class:list={[button, 'border border-line [anchor-name:--examples-button]']} popovertarget="examples">
+        Examples
+        <svg viewBox="0 0 16 16" class="size-3" aria-hidden="true">
+          <path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+      </button>
+      <!-- Full width under the header on phones; from sm, a fixed width lined up with the button. -->
+      <div
+        id="examples"
+        popover
+        class="inset-auto inset-x-3 top-13 m-0 w-auto rounded-lg border border-line bg-raised p-1 shadow-xl dark:shadow-black/40 [position-anchor:--examples-button] sm:right-auto sm:left-[anchor(left)] sm:w-80"
+      >
+        {
+          examples.map((example, index) => (
+            <button data-example={index} class="block w-full cursor-pointer rounded-md px-2.5 py-2 text-left text-xs text-muted hover:bg-hover">
+              <strong class="block text-sm font-medium text-fg">{example.name}</strong>
+              {example.description}
+            </button>
+          ))
+        }
+      </div>
+      <button class:list={[button, 'ml-auto text-muted']} id="share">Share</button>
+      <button
+        id="run"
+        class="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg bg-primary px-3 font-medium text-white hover:bg-primary/90 data-running:bg-fg data-running:text-surface"
+      >
+        <!-- Phones have no keyboard, so the shortcut hint is hidden there. -->
+        <span>Run</span><kbd class="font-sans text-xs opacity-70 max-md:hidden"></kbd>
+      </button>
+    </header>
+
+    <!-- Stacked on phones; side by side from md, with the editor's share of the width in --split. -->
+    <main class="grid min-h-0 flex-1 grid-rows-[55%_1px_1fr] *:min-h-0 *:min-w-0 md:grid-cols-[var(--split,55%)_1px_1fr] md:grid-rows-none">
+      <section id="editor" class="relative" aria-label="Editor">
+        <button
+          id="help"
+          aria-label="Show the welcome"
+          class="absolute right-3 bottom-3 z-10 size-8 cursor-pointer rounded-full border border-line bg-raised font-medium text-muted shadow-sm hover:text-fg"
+        >
+          ?
+        </button>
+      </section>
+      <!-- The ::before widens the 1px line into a comfortable drag target. Phones stack the panes, so it is inert there. -->
+      <div
+        id="divider"
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize editor and terminal"
+        tabindex="0"
+        class="relative z-10 cursor-col-resize touch-none bg-line before:absolute before:inset-y-0 before:-inset-x-1 hover:bg-primary hover:outline-2 hover:outline-primary active:bg-primary active:outline-2 active:outline-primary max-md:pointer-events-none"
+      >
+      </div>
+      <section class="bg-sunken py-3 pl-4 font-mono" aria-label="Terminal"><div id="terminal" class="h-full"></div></section>
+    </main>
+
+    <WelcomeDialog />
+  </body>
+</html>
+
+<script>
+  import { CODE_KEY } from '@/consts';
+  import { examples } from '@/examples';
+  import { createEditor, setCode } from '@/lib/editor';
+  import { createRunner } from '@/lib/runner';
+  import { shareUrl, sharedCode } from '@/lib/share';
+  import { getItem, setItem } from '@/lib/storage';
+
+  const main = document.querySelector('main')!;
+  const divider = document.getElementById('divider')!;
+  const examplesPopover = document.getElementById('examples')!;
+  const shareButton = document.getElementById('share')!;
+  const runButton = document.getElementById('run')!;
+  const welcome = document.getElementById('welcome') as HTMLDialogElement;
+
+  const initialCode = (await sharedCode()) ?? getItem(CODE_KEY) ?? examples[0].code;
+  const editor = createEditor(document.getElementById('editor')!, initialCode, (code) => {
+    setItem(CODE_KEY, code);
+    // A leftover share link would override the saved code on the next load.
+    if (location.hash) history.replaceState(null, '', location.pathname);
+  });
+
+  document.getElementById('help')!.addEventListener('click', () => welcome.showModal());
+  welcome.addEventListener('close', () => editor.focus());
+
+  // xterm measures its cell size once, so the font has to be ready before it opens.
+  const terminal = document.getElementById('terminal')!;
+  await document.fonts.load(`13px ${getComputedStyle(terminal).fontFamily}`);
+  const runner = createRunner(terminal, (running) => {
+    runButton.toggleAttribute('data-running', running);
+    runButton.firstElementChild!.textContent = running ? 'Stop' : 'Run';
+  });
+  const run = () => runner.start(editor.state.doc.toString());
+
+  const isApple = /Mac|iPhone|iPad/.test(navigator.platform);
+  runButton.querySelector('kbd')!.textContent = isApple ? '⌘↵' : 'Ctrl ↵';
+  runButton.addEventListener('click', () => {
+    if (runButton.hasAttribute('data-running')) runner.stop();
+    else run();
+  });
+
+  // Captured at the document so the shortcut also works while the terminal has focus.
+  document.addEventListener(
+    'keydown',
+    (event) => {
+      const isRunShortcut = event.key === 'Enter' && (event.metaKey || event.ctrlKey);
+      if (welcome.open || !isRunShortcut) return;
+      event.preventDefault();
+      event.stopPropagation();
+      run();
+    },
+    { capture: true },
+  );
+
+  examplesPopover.addEventListener('click', (event) => {
+    const item = (event.target as Element).closest<HTMLElement>('[data-example]');
+    if (!item) return;
+    const example = examples[Number(item.dataset.example)];
+    setCode(editor, example.code);
+    examplesPopover.hidePopover();
+    editor.focus();
+  });
+
+  shareButton.addEventListener('click', async () => {
+    const url = await shareUrl(editor.state.doc.toString());
+    history.replaceState(null, '', url);
+    const copied = await navigator.clipboard.writeText(url).then(
+      () => true,
+      () => false,
+    );
+    shareButton.textContent = copied ? 'Link copied' : 'Link is in the address bar';
+    setTimeout(() => {
+      shareButton.textContent = 'Share';
+    }, 2000);
+  });
+
+  let split = 0.55;
+  const setSplit = (value: number) => {
+    split = Math.min(0.8, Math.max(0.2, value));
+    main.style.setProperty('--split', `${split * 100}%`);
+  };
+  divider.addEventListener('pointerdown', (event) => divider.setPointerCapture(event.pointerId));
+  divider.addEventListener('pointermove', (event) => {
+    if (!divider.hasPointerCapture(event.pointerId)) return;
+    const { left, width } = main.getBoundingClientRect();
+    setSplit((event.clientX - left) / width);
+  });
+  divider.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowLeft') setSplit(split - 0.02);
+    if (event.key === 'ArrowRight') setSplit(split + 0.02);
+  });
+</script>
