@@ -3,7 +3,7 @@
   buildEnv,
   runCommand,
   removeReferencesTo,
-  writeShellScriptBin,
+  makeBinaryWrapper,
   bashNonInteractive,
   musl,
   binutils-unwrapped,
@@ -18,10 +18,11 @@ let
     remove-references-to -t ${binutils-unwrapped} $out/bin/ld
   '';
 
-  # Minimal musl `cc` for flick
-  cc = writeShellScriptBin "cc" ''
-    exec ${ld}/bin/ld -dynamic-linker ${musl}/lib/libc.so \
-      ${musl}/lib/crt1.o ${musl}/lib/crti.o "$@" -L${musl}/lib -lc ${musl}/lib/crtn.o
+  # Minimal musl `cc` for flick; a native wrapper so it doesn't need a shell
+  cc = runCommand "cc" { nativeBuildInputs = [ makeBinaryWrapper ]; } ''
+    makeBinaryWrapper ${ld}/bin/ld $out/bin/cc \
+      --add-flags "-dynamic-linker ${musl}/lib/libc.so ${musl}/lib/crt1.o ${musl}/lib/crti.o" \
+      --append-flags "-L${musl}/lib -lc ${musl}/lib/crtn.o"
   '';
 in
 dockerTools.buildImage {
