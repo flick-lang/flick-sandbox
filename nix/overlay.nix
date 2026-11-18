@@ -1,5 +1,6 @@
 final: prev:
-prev.lib.optionalAttrs prev.stdenv.hostPlatform.isMusl {
+# Not for pkgsStatic: Hydra caches its builds, and overriding them would forfeit the cached static LLVM
+prev.lib.optionalAttrs (prev.stdenv.hostPlatform.isMusl && !prev.stdenv.hostPlatform.isStatic) {
   # tzdata 2026f's now.ck fails after 2026-11-01, when zonenow.tab entries become duplicates
   tzdata = prev.tzdata.overrideAttrs { doCheck = false; };
 

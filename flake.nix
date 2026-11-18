@@ -25,7 +25,7 @@
               inherit system;
               overlays = [
                 inputs.flick.overlays.default
-                self.overlays.default
+                # self.overlays.default
               ];
             };
           in
@@ -36,7 +36,8 @@
       overlays.default = import ./nix/overlay.nix;
 
       packages = forEachSupportedSystem (pkgs: {
-        dockerImage = pkgs.pkgsCross.musl64.callPackage ./nix/docker-image.nix { };
+        # Static musl so the image needs no shared libs besides musl's libc.so, which `cc` links programs against
+        dockerImage = pkgs.pkgsCross.musl64.pkgsStatic.callPackage ./nix/docker-image.nix { };
       });
 
       devShells = forEachSupportedSystem (pkgs: {

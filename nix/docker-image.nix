@@ -10,8 +10,6 @@
   flick,
 }:
 let
-  flickStaticLLVM = flick.override { staticLLVM = true; };
-
   # Only `ld`; its self-references would pull in all of binutils
   ld = runCommand "ld" { nativeBuildInputs = [ removeReferencesTo ]; } ''
     install -Dm755 ${binutils-unwrapped}/bin/ld.bfd $out/bin/ld
@@ -32,7 +30,7 @@ dockerTools.buildImage {
   copyToRoot = buildEnv {
     name = "flick-image-root";
     paths = [
-      flickStaticLLVM
+      flick
       cc
       busybox-sandbox-shell
     ];
