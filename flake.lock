@@ -1,5 +1,25 @@
 {
   "nodes": {
+    "flick": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1794954745,
+        "narHash": "sha256-OjsMdFW3dsRw5jcSKh80s+t0+57Fg8714UeO8Wel1ms=",
+        "owner": "flick-lang",
+        "repo": "flick",
+        "rev": "96f7c74736c64bd9920cb79b9390bc807ea3a7d8",
+        "type": "github"
+      },
+      "original": {
+        "owner": "flick-lang",
+        "repo": "flick",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1794644783,
@@ -18,6 +38,7 @@
     },
     "root": {
       "inputs": {
+        "flick": "flick",
         "nixpkgs": "nixpkgs"
       }
     }

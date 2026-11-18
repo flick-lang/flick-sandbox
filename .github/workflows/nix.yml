@@ -1,0 +1,47 @@
+name: Nix build
+
+on:
+  push:
+    branches: [main]
+    paths: &nix-paths
+      - '**/*.nix'
+      - flake.lock
+      - .node-version
+      - .github/workflows/nix.yml
+  pull_request:
+    branches: [main]
+    paths: *nix-paths
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Determinate Nix
+        uses: DeterminateSystems/determinate-nix-action@v3
+
+      - name: Set up Magic Nix Cache
+        uses: DeterminateSystems/magic-nix-cache-action@v15
+        with:
+          use-gha-cache: true
+          use-flakehub: false
+
+      - name: Check flake.lock health
+        uses: DeterminateSystems/flake-checker-action@v14
+
+      - name: Build Docker image
+        run: nix build .#dockerImage
+
+      - name: Upload Docker image
+        uses: actions/upload-artifact@v7
+        with:
+          name: flick-image
+          path: result
+          compression-level: 0
+          retention-days: 7
+
