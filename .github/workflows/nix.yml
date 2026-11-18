@@ -60,10 +60,7 @@ jobs:
 
       - name: Push to Vercel Container Registry
         if: env.PUBLISH == 'true'
-        run: |
-          docker load < result
-          docker tag flick:latest "$IMAGE"
-          docker push "$IMAGE"
+        run: skopeo copy --dest-compress-format zstd docker-archive:result "docker://$IMAGE"
 
       - name: Wait for optimization
         if: env.PUBLISH == 'true'
@@ -75,8 +72,6 @@ jobs:
 
       - name: Promote the optimized image to latest
         if: env.PUBLISH == 'true'
-        run: |
-          LATEST_IMAGE="${IMAGE%:*}:latest"
-          docker tag "$IMAGE" "$LATEST_IMAGE"
-          docker push "$LATEST_IMAGE"
+        # --preserve-digests makes :latest the exact manifest that was optimized, instead of a re-encoded copy
+        run: skopeo copy --preserve-digests "docker://$IMAGE" "docker://${IMAGE%:*}:latest"
 
