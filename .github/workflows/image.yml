@@ -36,8 +36,7 @@ jobs:
       id-token: write
 
     env:
-      # A unique tag per build; it is promoted to :latest only once optimized, since sandboxes use :latest
-      IMAGE: vcr.vercel.com/max-larssons-projects/flick-sandbox/flick:${{ github.sha }}
+      REPOSITORY: vcr.vercel.com/max-larssons-projects/flick-sandbox/flick
       PUBLISH: ${{ github.ref == 'refs/heads/main' }}
 
     steps:
@@ -76,20 +75,22 @@ jobs:
         with:
           team: ${{ vars.VERCEL_TEAM_ID }}
 
+      # Pushed under a unique tag; sandboxes use :latest, which is only promoted once the image is optimized
       - name: Push to Vercel Container Registry
         if: env.PUBLISH == 'true'
-        run: ./result | skopeo copy --dest-compress-format zstd docker-archive:/dev/stdin "docker://$IMAGE"
+        run: ./result | skopeo copy --dest-compress-format zstd docker-archive:/dev/stdin "docker://$REPOSITORY:$GITHUB_SHA"
 
       - name: Wait for optimization
         if: env.PUBLISH == 'true'
         id: optimized
         uses: vercel/vcr-action/wait-for-optimized-image@v1
         with:
-          image: ${{ env.IMAGE }}
+          image: ${{ env.REPOSITORY }}:${{ github.sha }}
           timeout-seconds: 600
 
       - name: Promote the optimized image to latest
         if: env.PUBLISH == 'true'
-        # --preserve-digests makes :latest the exact manifest that was optimized, instead of a re-encoded copy
-        run: skopeo copy --preserve-digests "docker://$IMAGE" "docker://${IMAGE%:*}:latest"
+        env:
+          DIGEST: ${{ steps.optimized.outputs.digest }}
+        run: skopeo copy --preserve-digests "docker://$REPOSITORY@$DIGEST" "docker://$REPOSITORY:latest"
 
