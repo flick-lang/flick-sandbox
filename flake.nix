@@ -30,8 +30,8 @@
         );
     in
     {
-      packages = forEachSupportedSystem (pkgs: {
-        dockerImage = pkgs.callPackage ./docker-image.nix { };
+      ociImages = forEachSupportedSystem (pkgs: {
+        flick = pkgs.callPackage ./docker-image.nix { };
       });
 
       devShells = forEachSupportedSystem (pkgs: {
