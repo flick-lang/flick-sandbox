@@ -1,5 +1,8 @@
 .vercel
 
+# personal Claude Code settings
+.claude/settings.local.json
+
 # build output
 dist/
 # generated types
