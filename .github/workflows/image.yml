@@ -56,15 +56,18 @@ jobs:
         uses: DeterminateSystems/flake-checker-action@v14
 
       - name: Build Docker image
-        run: nix build .#dockerImage
+        run: nix build .#ociImages.x86_64-linux.flick
+
+      - name: Write Docker image
+        if: env.PUBLISH == 'false'
+        run: ./result > flick.tar
 
       - name: Upload Docker image
         if: env.PUBLISH == 'false'
         uses: actions/upload-artifact@v7
         with:
           name: flick-image
-          path: result
-          compression-level: 0
+          path: flick.tar
           retention-days: 7
 
       - name: Log in to Vercel Container Registry
@@ -75,7 +78,7 @@ jobs:
 
       - name: Push to Vercel Container Registry
         if: env.PUBLISH == 'true'
-        run: skopeo copy --dest-compress-format zstd docker-archive:result "docker://$IMAGE"
+        run: ./result | skopeo copy --dest-compress-format zstd docker-archive:/dev/stdin "docker://$IMAGE"
 
       - name: Wait for optimization
         if: env.PUBLISH == 'true'

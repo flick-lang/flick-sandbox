@@ -1,6 +1,5 @@
 {
   dockerTools,
-  buildEnv,
   runCommand,
   removeReferencesTo,
   makeBinaryWrapper,
@@ -24,24 +23,28 @@ let
       --add-flags "-dynamic-linker ${musl}/lib/libc.so ${musl}/lib/crt1.o ${musl}/lib/crti.o" \
       --append-flags "-L${musl}/lib -lc ${musl}/lib/crtn.o"
   '';
+
+  sandboxUser = "1000:1000";
 in
-dockerTools.buildImage {
+dockerTools.streamLayeredImage {
   name = "flick";
   tag = "latest";
 
-  copyToRoot = buildEnv {
-    name = "flick-image-root";
-    paths = [
-      flickStaticLLVM
-      cc
-      busybox-sandbox-shell
-    ];
-    pathsToLink = [ "/bin" ];
-  };
+  contents = [
+    flickStaticLLVM
+    cc
+    busybox-sandbox-shell
+  ];
 
-  extraCommands = "mkdir -m 1777 tmp workspace";
+  # /workspace belongs to the sandbox user; /tmp is shared, so it's world-writable with the sticky bit
+  fakeRootCommands = ''
+    mkdir -m 1777 tmp
+    mkdir workspace
+    chown ${sandboxUser} workspace
+  '';
+
   config = {
-    User = "1000:1000";
+    User = sandboxUser;
     WorkingDir = "/workspace";
     Env = [ "PATH=/bin" ];
   };
