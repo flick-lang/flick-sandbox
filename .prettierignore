@@ -1,0 +1,3 @@
+# Only src is formatted; other files (e.g. renovate.json5) keep their own conventions
+/*
+!/src/
