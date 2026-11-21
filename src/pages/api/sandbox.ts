@@ -11,7 +11,7 @@ async function create() {
 
   // The code runs as its author's shell, so the microVM plus these limits are the security boundary.
   const sandbox = await Sandbox.create({
-    image: 'flick',
+    image: 'sandbox:latest',
     resources: { vcpus: 1 },
     timeout: LIFETIME_MS,
     networkPolicy: 'deny-all',
