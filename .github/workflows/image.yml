@@ -24,7 +24,6 @@ jobs:
             nix:
               - '**/*.nix'
               - flake.lock
-              - .node-version
               - .github/workflows/image.yml
 
   build:
