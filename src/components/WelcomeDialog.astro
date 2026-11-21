@@ -4,32 +4,56 @@
   class="m-auto w-md rounded-xl border border-line bg-raised text-fg backdrop:bg-black/40"
 >
   <div class="p-6">
-    <h2 id="welcome-title" class="text-lg font-semibold tracking-tight">Welcome to the Flick Sandbox</h2>
+    <h2 id="welcome-title" class="text-lg font-semibold tracking-tight">
+      Welcome to the Flick Sandbox
+    </h2>
     <p class="mt-2 text-muted">
-      Flick is a small compiled language we built to explore compiler design. Use this sandbox to write and run Flick programs!
+      Flick is a small compiled language we built to explore compiler design.
+      Use this sandbox to write and run Flick programs!
     </p>
     <ul class="mt-4 list-disc space-y-1.5 pl-5 text-muted marker:text-faint">
-      <li><strong class="font-medium text-fg">Run</strong> compiles and runs your code.</li>
-      <li><strong class="font-medium text-fg">Examples</strong> loads a sample program.</li>
+      <li>
+        <strong class="font-medium text-fg">Run</strong> compiles and runs your
+        code.
+      </li>
+      <li>
+        <strong class="font-medium text-fg">Examples</strong> loads a sample
+        program.
+      </li>
     </ul>
     <form method="dialog" class="mt-6 flex items-center justify-between">
-      <a class="text-accent hover:underline" href="https://github.com/flick-lang/flick" target="_blank" rel="noreferrer">More about Flick</a>
-      <button autofocus class="h-8 cursor-pointer rounded-lg bg-primary px-3 font-medium text-white hover:bg-primary/90">Start coding</button>
+      <a
+        class="text-accent hover:underline"
+        href="https://github.com/flick-lang/flick"
+        target="_blank"
+        rel="noreferrer"
+      >
+        More about Flick
+      </a>
+      <button
+        autofocus
+        class="h-8 cursor-pointer rounded-lg bg-primary px-3 font-medium text-white hover:bg-primary/90"
+      >
+        Start coding
+      </button>
     </form>
   </div>
 </dialog>
 
 <script>
-  import { WELCOME_KEY } from '@/consts';
-  import { getItem, setItem } from '@/lib/storage';
+  import { WELCOME_KEY } from "@/consts";
+  import { getItem, setItem } from "@/lib/storage";
 
-  const welcome = document.getElementById('welcome') as HTMLDialogElement;
+  const welcome = document.getElementById("welcome") as HTMLDialogElement;
   // Close the dialog when the area outside the dialog is clicked
-  welcome.addEventListener('click', (event) => event.target === welcome && welcome.close());
+  welcome.addEventListener(
+    "click",
+    (event) => event.target === welcome && welcome.close(),
+  );
 
   // Shown on the first visit only
   if (getItem(WELCOME_KEY) === null) {
     welcome.showModal();
-    setItem(WELCOME_KEY, '1');
+    setItem(WELCOME_KEY, "1");
   }
 </script>
