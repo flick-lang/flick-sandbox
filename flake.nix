@@ -31,7 +31,7 @@
     in
     {
       ociImages = forEachSupportedSystem (pkgs: {
-        flick = pkgs.callPackage ./docker-image.nix { };
+        sandbox = pkgs.callPackage ./sandbox-image.nix { };
       });
 
       devShells = forEachSupportedSystem (pkgs: {
@@ -41,7 +41,6 @@
             pnpm
             vtsls
             astro-language-server
-            typescript-language-server
           ];
         };
       });

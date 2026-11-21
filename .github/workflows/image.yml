@@ -36,7 +36,7 @@ jobs:
       id-token: write
 
     env:
-      REPOSITORY: vcr.vercel.com/max-larssons-projects/flick-sandbox/flick
+      REPOSITORY: vcr.vercel.com/max-larssons-projects/flick-sandbox/sandbox
       PUBLISH: ${{ github.ref == 'refs/heads/main' }}
 
     steps:
@@ -55,18 +55,18 @@ jobs:
         uses: DeterminateSystems/flake-checker-action@v14
 
       - name: Build Docker image
-        run: nix build .#ociImages.x86_64-linux.flick
+        run: nix build .#ociImages.x86_64-linux.sandbox
 
       - name: Write Docker image
         if: env.PUBLISH == 'false'
-        run: ./result > flick.tar
+        run: ./result > sandbox.tar
 
       - name: Upload Docker image
         if: env.PUBLISH == 'false'
         uses: actions/upload-artifact@v7
         with:
-          name: flick-image
-          path: flick.tar
+          name: sandbox-image
+          path: sandbox.tar
           retention-days: 7
 
       - name: Log in to Vercel Container Registry

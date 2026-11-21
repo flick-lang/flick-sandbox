@@ -27,7 +27,7 @@ let
   sandboxUser = "1000:1000";
 in
 dockerTools.streamLayeredImage {
-  name = "flick";
+  name = "sandbox";
   tag = "latest";
 
   contents = [
