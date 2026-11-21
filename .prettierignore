@@ -1,3 +1,4 @@
-# Only src is formatted; other files (e.g. renovate.json5) keep their own conventions
-/*
-!/src/
+# Prettier also skips .gitignore'd files and file types it can't parse
+.github/
+pnpm-lock.yaml
+.mcp.json
