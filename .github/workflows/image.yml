@@ -15,9 +15,9 @@ jobs:
     outputs:
       nix: ${{ steps.filter.outputs.nix }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: dorny/paths-filter@v4
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         id: filter
         with:
           filters: |
@@ -39,19 +39,19 @@ jobs:
       PUBLISH: ${{ github.ref == 'refs/heads/main' }}
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Install Determinate Nix
-        uses: DeterminateSystems/determinate-nix-action@v3
+        uses: DeterminateSystems/determinate-nix-action@4b040423529d49b1a19ba918742e0aa9aa95031a # v3.24.3
 
       - name: Set up Magic Nix Cache
-        uses: DeterminateSystems/magic-nix-cache-action@v15
+        uses: DeterminateSystems/magic-nix-cache-action@84c0677f58dcedf3b91f8223ce36a9ea5b3c84b7 # v15
         with:
           use-gha-cache: true
           use-flakehub: false
 
       - name: Check flake.lock health
-        uses: DeterminateSystems/flake-checker-action@v14
+        uses: DeterminateSystems/flake-checker-action@786422608c7bded2bbc9741ad9f91356842bf520 # v14
 
       - name: Build Docker image
         run: nix build .#ociImages.x86_64-linux.sandbox
@@ -62,7 +62,7 @@ jobs:
 
       - name: Upload Docker image
         if: env.PUBLISH == 'false'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: sandbox-image
           path: sandbox.tar
@@ -70,7 +70,7 @@ jobs:
 
       - name: Log in to Vercel Container Registry
         if: env.PUBLISH == 'true'
-        uses: vercel/vcr-action/login@v1
+        uses: vercel/vcr-action/login@768239251a1d0187eefddeb7d752d38169a89899 # v1
         with:
           team: ${{ vars.VERCEL_TEAM_ID }}
 
@@ -82,7 +82,7 @@ jobs:
       - name: Wait for optimization
         if: env.PUBLISH == 'true'
         id: optimized
-        uses: vercel/vcr-action/wait-for-optimized-image@v1
+        uses: vercel/vcr-action/wait-for-optimized-image@768239251a1d0187eefddeb7d752d38169a89899 # v1
         with:
           image: ${{ env.REPOSITORY }}:${{ github.sha }}
           timeout-seconds: 600
